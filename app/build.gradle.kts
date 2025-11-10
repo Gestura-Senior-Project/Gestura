@@ -32,7 +32,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
+        buildConfigField("String", "GENASL_API_BASE", "\"${lp("GENASL_API_BASE")}\"")
         buildConfigField("String", "LARA_ACCESS_KEY_ID", "\"${lp("LARA_ACCESS_KEY_ID")}\"")
         buildConfigField("String", "LARA_ACCESS_KEY_SECRET", "\"${lp("LARA_ACCESS_KEY_SECRET")}\"")
         buildConfigField("String", "GENASL_BASE_URL", "\"${lp("GENASL_BASE_URL")}\"")
@@ -75,6 +75,13 @@ android {
 }
 
 dependencies {
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Media3 ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
     // Compose BOM + artifacts
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
@@ -82,7 +89,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.glance.appwidget)
     implementation("androidx.compose.material:material-icons-extended")
-
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
     // AndroidX core
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
