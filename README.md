@@ -12,7 +12,7 @@ Gestura (Unit 7)
 
 ### Description
 
-**Gestura** is an AI-powered mobil app. It translates American Sign Language (ASL) gestures into text and speech — and vice versa — in real time. The app also allows users to learn ASL, contribute gesture data to train models, and stay updated as it with the latest AI model.  
+**Gestura** is an AI-powered mobile app. It translates American Sign Language (ASL) gestures into text and speech — and vice versa — in real time. The app also allows users to learn ASL, contribute gesture data to train models, and stay updated as it with the latest AI model.  
 Gestura bridges the communication gap between Deaf and hearing communities through accessibility-focused innovation.
 
 ### App Evaluation
