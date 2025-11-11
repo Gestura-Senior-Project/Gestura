@@ -133,19 +133,46 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 
 ## GitHub Project board
 
-[Add screenshot of your Project Board with three milestones visible in
-this section]
-<img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
+**Milestone:** Sprint 1 – Unit 8 (100% complete)  
+The milestone tracked three feature issues that were planned and delivered in this sprint.
 
-## Issue cards
+![Milestone Board]()
 
-- [Add screenshot of your Project Board with the issues that you've been working on for this unit's milestone] <img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
-- [Add screenshot of your Project Board with the issues that you're working on in the **NEXT sprint**. It should include issues for next unit with assigned owners.] <img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
+**All milestones overview (context):**  
+![Milestones Overview]()
+
+---
 
 ## Issues worked on this sprint
 
-- List the issues you completed this sprint
-- [Add giphy that shows current build progress for Milestone 2. Note: We will be looking for progression of work between Milestone 2 and 3. Make sure your giphys are not duplicated and clearly show the change from Sprint 1 to 2.]
+**Completed (3/3):**
+- ✅ **Bottom Navigation** — Implemented Material BottomNavigationView wired to Navigation Component; tab IDs mapped directly to fragment IDs; hides on Login.
+- ✅ **Login** — Email/password auth with Firebase (sign-in/sign-up/reset), error states, loading progress, back-stack cleared after auth.
+- ✅ **Language translation tab** — Compose-based screen embedded in Fragment; language swap, text input.
+
+---
+
+## Build progress (GIFs)
+
+**Bottom Navigation flow**  
+![Bottom Navigation](bottomnav.gif)
+
+**Language Translation tab**  
+![Language Translation](Lang.gif)
+
+**Login flow**  
+![Login Flow](login.gif)
+
+---
+
+## What’s next (Sprint 2 – Unit 9 preview)
+
+- ASL capture/translation polish inside `OnDeviceCaptionFragment`.
+- Hook Language tab to live translation API + voice input.
+- Avatar tab scaffolding and API contract for ASL avatar service.
+- Contributor stats persistence; gate Developer Mode via real metrics.
+"""
+
 
 <br>
 
