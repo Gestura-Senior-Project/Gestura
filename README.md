@@ -133,13 +133,14 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 
 ## GitHub Project board
 
-**Milestone:** Sprint 1 – Unit 8 (100% complete)  
-The milestone tracked three feature issues that were planned and delivered in this sprint.
+![Milestone Board](allmile.png)
 
-![Milestone Board]()
+## Issues Cards
+**Sprint 1**
+![Issue](unit_progress.png)
+**Sprint 2**
+![Issue](sprint2.png)
 
-**All milestones overview (context):**  
-![Milestones Overview](allmile.png)
 
 ---
 
@@ -162,16 +163,6 @@ The milestone tracked three feature issues that were planned and delivered in th
 
 **Login flow**  
 ![Login Flow](login.gif)
-
----
-
-## What’s next (Sprint 2 – Unit 9 preview)
-
-- ASL capture/translation polish inside `OnDeviceCaptionFragment`.
-- Hook Language tab to live translation API + voice input.
-- Avatar tab scaffolding and API contract for ASL avatar service.
-- Contributor stats persistence; gate Developer Mode via real metrics.
-"""
 
 
 <br>
