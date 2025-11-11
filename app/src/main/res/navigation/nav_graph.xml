@@ -4,11 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/loginFragment">
+
     <fragment
         android:id="@+id/loginFragment"
         android:name="com.example.gestura.auth.LoginFragment"
-        tools:layout="@layout/fragment_login" />
+        tools:layout="@layout/fragment_login">
 
+        <!-- NEW: action to your home screen -->
+        <action
+            android:id="@+id/action_login_to_home"
+            app:destination="@id/aslFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/translationFragment"
@@ -25,7 +33,6 @@
         android:name="com.example.gestura.ui.OnDeviceCaptionFragment"
         android:label="ASL"
         tools:layout="@layout/fragment_compose_host" />
-
 
     <fragment
         android:id="@+id/contributeFragment"

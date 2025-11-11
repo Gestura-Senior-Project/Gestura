@@ -9,40 +9,46 @@ import com.example.gestura.util.ThemeHelper
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 
+// MainActivity.kt (keep your imports)
 class MainActivity : AppCompatActivity(R.layout.activity_main) {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 1) Apply saved theme & language BEFORE UI inflates
         val prefs = getSharedPreferences("gestura_settings", MODE_PRIVATE)
-        val savedTheme = prefs.getString("theme", "auto") ?: "auto"   // "light" | "dark" | "auto"
+        val savedTheme = prefs.getString("theme", "auto") ?: "auto"
         ThemeHelper.apply(savedTheme)
-
 
         super.onCreate(savedInstanceState)
 
-        // 2) NavHost + controller
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host) as NavHostFragment
-        val navController = navHostFragment.navController
+        val navHost = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
+        val navController = navHost.navController
 
-        // 3) Start at Home if signed in; else Login
-        navController.graph = navController.navInflater.inflate(R.navigation.nav_graph).apply {
-            setStartDestination(
-                if (auth.currentUser != null) R.id.aslFragment else R.id.loginFragment
-            )
+        // ✅ Only choose start destination once
+        if (savedInstanceState == null) {
+            val user = auth.currentUser
+            val isSignedIn = user != null /* or: user?.isEmailVerified == true */
+            navController.graph = navController.navInflater.inflate(R.navigation.nav_graph).apply {
+                setStartDestination(if (isSignedIn) R.id.aslFragment else R.id.loginFragment)
+            }
         }
 
-        // 4) Bottom nav wiring
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_nav)
         bottomNav.setupWithNavController(navController)
 
-        // Hide bottom bar on Login (so buttons aren't covered)
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            bottomNav.visibility = if (destination.id == R.id.loginFragment) View.GONE else View.VISIBLE
+        navController.addOnDestinationChangedListener { _, dest, _ ->
+            bottomNav.visibility = if (dest.id == R.id.loginFragment) View.GONE else View.VISIBLE
         }
-
         bottomNav.setOnItemReselectedListener { /* no-op */ }
     }
+}
+
+// Optional helper: call from anywhere to logout and jump to Login (clears stack)
+fun AppCompatActivity.signOutAndReturnToLogin() {
+    FirebaseAuth.getInstance().signOut()
+    val navHost = supportFragmentManager.findFragmentById(R.id.nav_host) as NavHostFragment
+    val nav = navHost.navController
+    nav.navigate(R.id.loginFragment, null, androidx.navigation.navOptions {
+        popUpTo(0) { inclusive = true } // clear entire back stack
+    })
 }

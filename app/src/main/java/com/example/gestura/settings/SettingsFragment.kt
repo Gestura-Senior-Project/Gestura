@@ -14,6 +14,8 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.navOptions
 import com.example.gestura.R
 import com.example.gestura.util.ThemeHelper
 import com.google.firebase.auth.FirebaseAuth
@@ -50,34 +52,24 @@ class SettingsFragment : Fragment() {
 
         // Preferences
         val spTheme = view.findViewById<Spinner>(R.id.spTheme)
-
         spTheme.adapter = ArrayAdapter.createFromResource(
             requireContext(), R.array.settings_themes, android.R.layout.simple_spinner_dropdown_item
         )
-
 
         vm.theme.observe(viewLifecycleOwner) { theme ->
             val idx = resources.getStringArray(R.array.settings_themes_values).indexOf(theme)
             if (idx >= 0 && spTheme.selectedItemPosition != idx) spTheme.setSelection(idx)
         }
 
-
-
         spTheme.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                val value = resources.getStringArray(R.array.settings_themes_values)[pos]
+                val value = resources.getStringArray(R.array.settings_themes_values)[pos] // "light"|"dark"|"auto"
                 vm.setTheme(value)
-                spTheme.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                        val value = resources.getStringArray(R.array.settings_themes_values)[pos] // "light"|"dark"|"auto"
-                        vm.setTheme(value)
-                        ThemeHelper.apply(value)   // ← this actually switches Light/Dark/Auto
-                    }
-                    override fun onNothingSelected(parent: AdapterView<*>?) {}
-                }
+                ThemeHelper.apply(value) // applies Light/Dark/Auto
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+
         // AI Model
         val swAutoUpdate = view.findViewById<Switch>(R.id.swAutoUpdate)
         val swMaskSync = view.findViewById<Switch>(R.id.swMaskSync)
@@ -96,7 +88,7 @@ class SettingsFragment : Fragment() {
         // Stats + Developer (safe when no DB)
         val tvContrib = view.findViewById<TextView>(R.id.tvContrib)
         val tvAccuracy = view.findViewById<TextView>(R.id.tvAccuracy)
-        val tvStatsHint = view.findViewById<TextView>(R.id.tvStatsHint) // NEW name (fixed)
+        val tvStatsHint = view.findViewById<TextView>(R.id.tvStatsHint)
         val tvDevHint = view.findViewById<TextView>(R.id.tvDevHint)
         val swDevMode = view.findViewById<Switch>(R.id.swDevMode)
         val rowReview = view.findViewById<View>(R.id.rowReviewContrib)
@@ -146,10 +138,19 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(), "Open dev review screen (coming soon)", Toast.LENGTH_SHORT).show()
         }
 
-        // Logout
+        // ✅ Logout: sign out + navigate to Login and clear the stack
         view.findViewById<View>(R.id.btnLogout).setOnClickListener {
             auth.signOut()
             Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show()
+
+            val navHost = requireActivity()
+                .supportFragmentManager
+                .findFragmentById(R.id.nav_host) as NavHostFragment
+            val nav = navHost.navController
+
+            nav.navigate(R.id.loginFragment, null, navOptions {
+                popUpTo(0) { inclusive = true } // clear entire back stack
+            })
         }
     }
 }

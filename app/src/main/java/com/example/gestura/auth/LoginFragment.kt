@@ -97,10 +97,9 @@ class LoginFragment : Fragment() {
 
     private fun toHome() {
         findNavController().navigate(
-            R.id.aslFragment, null,
-            androidx.navigation.navOptions { popUpTo(R.id.loginFragment) { inclusive = true } }
+            R.id.action_login_to_home
         )
-    }
+}
 
     override fun onDestroyView() {
         super.onDestroyView()
