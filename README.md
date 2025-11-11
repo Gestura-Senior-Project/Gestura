@@ -139,7 +139,7 @@ The milestone tracked three feature issues that were planned and delivered in th
 ![Milestone Board]()
 
 **All milestones overview (context):**  
-![Milestones Overview]()
+![Milestones Overview](allmile.png)
 
 ---
 
