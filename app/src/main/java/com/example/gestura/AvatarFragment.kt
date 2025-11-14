@@ -1,82 +1,59 @@
 package com.example.gestura
 
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
-import com.example.gestura.ui.AvatarViewModel
-import kotlinx.coroutines.flow.collectLatest
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 
-class AvatarFragment : Fragment(R.layout.fragment_avatar) {
+// TODO: Rename parameter arguments, choose names that match
+// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
+private const val ARG_PARAM1 = "param1"
+private const val ARG_PARAM2 = "param2"
 
-    private val vm: AvatarViewModel by viewModels()
+/**
+ * A simple [Fragment] subclass.
+ * Use the [AvatarFragment.newInstance] factory method to
+ * create an instance of this fragment.
+ */
+class AvatarFragment : Fragment() {
+    // TODO: Rename and change types of parameters
+    private var param1: String? = null
+    private var param2: String? = null
 
-    private var player: ExoPlayer? = null
-    private lateinit var playerView: PlayerView
-    private lateinit var input: EditText
-    private lateinit var btn: Button
-    private lateinit var progress: ProgressBar
-    private lateinit var errorText: TextView
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        input = view.findViewById(R.id.inputText)
-        btn = view.findViewById(R.id.generateBtn)
-        progress = view.findViewById(R.id.progress)
-        errorText = view.findViewById(R.id.errorText)
-        playerView = view.findViewById(R.id.playerView)
-
-        btn.setOnClickListener {
-            vm.generate(input.text.toString())
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let {
+            param1 = it.getString(ARG_PARAM1)
+            param2 = it.getString(ARG_PARAM2)
         }
+    }
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            vm.state.collectLatest { s ->
-                progress.visibility = if (s.loading) View.VISIBLE else View.GONE
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_avatar, container, false)
+    }
 
-                if (s.error != null) {
-                    errorText.text = s.error
-                    errorText.visibility = View.VISIBLE
-                } else {
-                    errorText.visibility = View.GONE
-                }
-
-                s.videoUrl?.let { url ->
-                    ensurePlayer()
-                    player?.setMediaItem(MediaItem.fromUri(url))
-                    player?.prepare()
-                    player?.playWhenReady = true
+    companion object {
+        /**
+         * Use this factory method to create a new instance of
+         * this fragment using the provided parameters.
+         *
+         * @param param1 Parameter 1.
+         * @param param2 Parameter 2.
+         * @return A new instance of fragment AvatarFragment.
+         */
+        // TODO: Rename and change types and number of parameters
+        @JvmStatic
+        fun newInstance(param1: String, param2: String) =
+            AvatarFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_PARAM1, param1)
+                    putString(ARG_PARAM2, param2)
                 }
             }
-        }
-    }
-
-    private fun ensurePlayer() {
-        if (player == null) {
-            player = ExoPlayer.Builder(requireContext()).build()
-            playerView.player = player
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        player?.playWhenReady = false
-        player?.pause()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        playerView.player = null
-        player?.release()
-        player = null
     }
 }

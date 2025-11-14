@@ -75,22 +75,7 @@ android {
 }
 
 dependencies {
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-
-    // Media3 ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.4.1")
-    implementation("androidx.media3:media3-ui:1.4.1")
-    // Compose BOM + artifacts
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.glance.appwidget)
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
-    // AndroidX core
+    // --- Kotlin + AndroidX core (from your version catalog) ---
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -99,41 +84,58 @@ dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.constraintlayout)
 
-    // Firebase
+    // --- Compose (use BOM; no per-artifact versions) ---
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.compose)   // Activity-Compose bridge
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.glance.appwidget)
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // --- Navigation ---
+    implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
+    implementation("androidx.navigation:navigation-ui-ktx:2.8.3")
+    implementation("androidx.navigation:navigation-compose:2.8.3")
+
+    // --- Firebase ---
     implementation(libs.firebase.auth)
 
-    // --- ML (pick one stack; keeping YOUR choices) ---
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
-    implementation("com.google.mediapipe:tasks-vision:0.10.9")
-
-    // --- Video playback: your code uses ExoPlayer 2.x (not Media3) ---
-    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
-    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
-
-    // Networking + JSON (single set, no duplicates)
+    // --- Networking + JSON ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
     implementation("com.squareup.moshi:moshi-kotlin:1.15.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("org.json:json:20240303")
 
-    // Material
+    // --- Video playback (ExoPlayer 2.x; keep this OR Media3, not both) ---
+    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
+    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
+
+    // --- MediaPipe Tasks (vision) ---
+    implementation("com.google.mediapipe:tasks-vision:0.10.9")
+
+    // --- TensorFlow Lite (use one consistent version family) ---
+
+    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.15.0")
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
+
+    // --- LARA SDK ---
+    implementation("com.translated.lara:lara-sdk:1.4.3")
+
+    // --- Material (View system) if you still use XML/views alongside Compose ---
     implementation(libs.material)
 
-    // Your other libs
+    // --- Other (keep only if actually used) ---
     implementation(libs.genai.common)
     implementation(libs.androidx.room.external.antlr)
 
-    // Navigation
-    implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
-    implementation("androidx.navigation:navigation-ui-ktx:2.8.3")
-    implementation("androidx.navigation:navigation-compose:2.8.3")
-
-    // LARA SDK
-    implementation("com.translated.lara:lara-sdk:1.4.3")
-
-    // Tests
+    // --- Tests ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit.ext)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation("org.tensorflow:tensorflow-lite:2.9.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:2.9.0") // If you are using GPU delegation
 }
+

@@ -1,45 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/avatar_root"
-    android:orientation="vertical"
-    android:padding="16dp"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".AvatarFragment">
 
-    <EditText
-        android:id="@+id/inputText"
-        android:hint="Enter text to sign"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/generateBtn"
-        android:text="Generate"
-        android:layout_marginTop="12dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <ProgressBar
-        android:id="@+id/progress"
-        style="?android:attr/progressBarStyleLarge"
-        android:visibility="gone"
-        android:layout_marginTop="12dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
+    <!-- TODO: Update blank fragment layout -->
     <TextView
-        android:id="@+id/errorText"
-        android:visibility="gone"
-        android:layout_marginTop="8dp"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"
+        android:text="@string/hello_blank_fragment" />
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/playerView"
-        android:layout_marginTop="16dp"
-        android:layout_width="match_parent"
-        android:layout_height="220dp"
-        app:show_buffering="when_playing" />
-</LinearLayout>
+</FrameLayout>
