@@ -108,18 +108,6 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("org.json:json:20240303")
 
-    // --- Video playback (ExoPlayer 2.x; keep this OR Media3, not both) ---
-    implementation("com.google.android.exoplayer:exoplayer:2.19.1")
-    implementation("com.google.android.exoplayer:exoplayer-ui:2.19.1")
-
-    // --- MediaPipe Tasks (vision) ---
-    implementation("com.google.mediapipe:tasks-vision:0.10.9")
-
-    // --- TensorFlow Lite (use one consistent version family) ---
-
-    implementation("org.tensorflow:tensorflow-lite-select-tf-ops:2.15.0")
-    implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-
     // --- LARA SDK ---
     implementation("com.translated.lara:lara-sdk:1.4.3")
 
@@ -135,7 +123,8 @@ dependencies {
     androidTestImplementation(libs.androidx.junit.ext)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation("org.tensorflow:tensorflow-lite:2.9.0")
-    implementation("org.tensorflow:tensorflow-lite-gpu:2.9.0") // If you are using GPU delegation
+    implementation("org.tensorflow:tensorflow-lite:2.10.0")
+    implementation("com.google.mediapipe:tasks-vision:0.10.26")
+
 }
 
