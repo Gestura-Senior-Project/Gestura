@@ -1,6 +1,7 @@
 package com.example.gestura.auth
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +24,11 @@ class LoginFragment : Fragment() {
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val scope = MainScope()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View =
         inflater.inflate(R.layout.fragment_login, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -37,7 +42,8 @@ class LoginFragment : Fragment() {
 
         fun setLoading(b: Boolean) {
             progress.visibility = if (b) View.VISIBLE else View.GONE
-            signIn.isEnabled = !b; signUp.isEnabled = !b
+            signIn.isEnabled = !b
+            signUp.isEnabled = !b
         }
 
         emailEt.addTextChangedListener { errorTv.text = "" }
@@ -51,13 +57,22 @@ class LoginFragment : Fragment() {
                 try {
                     require(email.isNotEmpty()) { "Email required" }
                     require(pass.isNotEmpty()) { "Password required" }
+
+                    // Sign in
                     auth.signInWithEmailAndPassword(email, pass).await()
+
+                    // 🔑 Get ID token and log it
+                    val token = auth.currentUser?.getIdToken(true)?.await()?.token
+                    Log.d("ID_TOKEN", "ID token: $token")
+
                     toHome()
                 } catch (e: IllegalArgumentException) {
                     errorTv.text = e.message
                 } catch (e: Exception) {
                     errorTv.text = e.localizedMessage ?: "Sign-in failed"
-                } finally { setLoading(false) }
+                } finally {
+                    setLoading(false)
+                }
             }
         }
 
@@ -69,14 +84,23 @@ class LoginFragment : Fragment() {
                 try {
                     require(email.isNotEmpty()) { "Email required" }
                     require(pass.length >= 6) { "Password must be ≥ 6 characters" }
+
+                    // Create account
                     auth.createUserWithEmailAndPassword(email, pass).await()
                     runCatching { auth.currentUser?.sendEmailVerification()?.await() }
+
+                    // 🔑 Get ID token and log it
+                    val token = auth.currentUser?.getIdToken(true)?.await()?.token
+                    Log.d("ID_TOKEN", "ID token: $token")
+
                     toHome()
                 } catch (e: IllegalArgumentException) {
                     errorTv.text = e.message
                 } catch (e: Exception) {
                     errorTv.text = e.localizedMessage ?: "Sign-up failed"
-                } finally { setLoading(false) }
+                } finally {
+                    setLoading(false)
+                }
             }
         }
 
@@ -90,7 +114,9 @@ class LoginFragment : Fragment() {
                     Toast.makeText(requireContext(), "Reset email sent", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     errorTv.text = e.localizedMessage ?: "Reset failed"
-                } finally { setLoading(false) }
+                } finally {
+                    setLoading(false)
+                }
             }
         }
     }
@@ -99,7 +125,7 @@ class LoginFragment : Fragment() {
         findNavController().navigate(
             R.id.action_login_to_home
         )
-}
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()

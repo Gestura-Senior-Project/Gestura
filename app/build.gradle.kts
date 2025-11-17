@@ -98,7 +98,18 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
     // --- Firebase ---
-    implementation(libs.firebase.auth)
+
+        // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+
+        // Add the dependencies for the Firebase products you want to use
+        // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-functions-ktx")
+
+        // ... add other Firebase dep
 
     // --- Networking + JSON ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -125,6 +136,10 @@ dependencies {
 
     implementation("org.tensorflow:tensorflow-lite:2.10.0")
     implementation("com.google.mediapipe:tasks-vision:0.10.26")
+
+
+    implementation("com.google.mediapipe:tasks-vision:0.10.14")
+
 
 }
 

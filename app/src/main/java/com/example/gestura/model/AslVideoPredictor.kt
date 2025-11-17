@@ -19,7 +19,7 @@ class AslVideoPredictor(
         private const val FEATURES_PER_FRAME = 1662
 
         // TODO: replace with your actual Render URL (no trailing slash)
-        private const val HOLISTIC_BASE_URL = "https://gestura-holistic-server.onrender.com"
+        private const val HOLISTIC_BASE_URL = "http://10.0.2.2:8000"
         private const val EXTRACT_PATH = "/extract"
     }
 
@@ -57,6 +57,7 @@ class AslVideoPredictor(
             label = result.label,
             confidence = result.confidence,
             probabilities = result.allProbabilities
+
         )
     }
 

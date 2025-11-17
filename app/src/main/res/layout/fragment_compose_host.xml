@@ -1,139 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/root"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootScroll"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:colorBackground">
+    android:fillViewport="true"
+    tools:context=".ui.OnDeviceCaptionFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header -->
+        <!-- Empty state (shown before video selected) -->
         <LinearLayout
+            android:id="@+id/emptyState"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="8dp">
+            android:gravity="center"
+            android:padding="24dp"
+            tools:visibility="visible">
 
             <TextView
-                android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ASL Translation"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
+                android:text="Upload an ASL video to get started"
+                android:textSize="16sp" />
 
-            <TextView
-                android:id="@+id/subtitle"
+            <Button
+                android:id="@+id/buttonUploadPrimary"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Upload a video to translate ASL signs on device"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-                android:textColor="?android:textColorSecondary" />
+                android:layout_marginTop="12dp"
+                android:text="Upload video" />
         </LinearLayout>
 
-        <!-- Video card -->
+        <!-- Video + caption overlay -->
         <FrameLayout
-            android:id="@+id/videoCard"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="#101010"
-            android:foreground="?attr/selectableItemBackground"
-            android:clipToPadding="true"
-            android:padding="8dp">
+            android:layout_height="220dp"
+            android:layout_marginTop="12dp">
 
             <VideoView
                 android:id="@+id/videoView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:keepScreenOn="true"
                 android:visibility="gone" />
 
-            <!-- Empty state -->
-            <LinearLayout
-                android:id="@+id/emptyState"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:src="@android:drawable/ic_menu_upload"
-                    android:layout_marginBottom="12dp"
-                    app:tint="#888888" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="No video uploaded"
-                    android:textColor="#bbbbbb"
-                    android:layout_marginBottom="12dp"/>
-
-                <Button
-                    android:id="@+id/buttonUploadPrimary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Upload video"/>
-            </LinearLayout>
-
-            <!-- Caption overlay -->
+            <!-- Caption overlay at bottom -->
             <LinearLayout
                 android:id="@+id/captionOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
-                android:padding="12dp"
-                android:gravity="center"
                 android:orientation="vertical"
-                android:background="@android:color/transparent"
+                android:padding="8dp"
+                android:background="#80000000"
                 android:visibility="gone">
-
-                <TextView
-                    android:id="@+id/confidenceChip"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="8dp"
-                    android:paddingVertical="4dp"
-                    android:text="95% confident"
-                    android:textColor="@android:color/white"
-                    android:textSize="12sp"
-                    android:background="@android:color/transparent" />
 
                 <TextView
                     android:id="@+id/captionText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="8dp"
-                    android:text="Hello"
                     android:textColor="@android:color/white"
                     android:textSize="18sp"
-                    android:background="#80000000"
-                    android:gravity="center"/>
+                    tools:text="Predicted caption goes here" />
+
+                <TextView
+                    android:id="@+id/confidenceChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="2dp"
+                    android:background="@android:color/darker_gray"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    tools:text="95.4% confident" />
+
             </LinearLayout>
 
-            <!-- Clear button -->
-            <ImageButton
-                android:id="@+id/buttonClear"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_gravity="top|end"
-                android:layout_margin="8dp"
-                android:background="@android:color/transparent"
-                android:src="@android:drawable/ic_menu_close_clear_cancel"
-                android:visibility="gone"
-                app:tint="@android:color/white" />
         </FrameLayout>
 
-        <!-- Controls -->
+        <!-- Secondary actions row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -142,74 +93,73 @@
             android:layout_marginTop="8dp">
 
             <Button
-                android:id="@+id/buttonPlayPause"
+                android:id="@+id/buttonUploadSecondary"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Play"
-                />
+                android:text="Upload" />
 
-            <View
-                android:layout_width="8dp"
-                android:layout_height="0dp"/>
+            <TextView
+                android:id="@+id/buttonPlayPause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Play"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:background="@android:color/darker_gray"
+                android:textColor="@android:color/white" />
 
             <Button
-                android:id="@+id/buttonUploadSecondary"
+                android:id="@+id/buttonClear"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:text="Upload"/>
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Clear"
+                android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Current translation + actions -->
+        <!-- Current translation -->
         <LinearLayout
             android:id="@+id/currentTranslationGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Current translation"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-                android:textColor="?android:textColorSecondary"/>
+                android:textStyle="bold"
+                android:textSize="16sp" />
 
             <TextView
                 android:id="@+id/textCurrentTranslation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:padding="8dp"
-                android:background="@android:color/darker_gray"
-                android:textColor="@android:color/white"
-                android:textSize="16sp"/>
+                tools:text="Hello, how are you?\n(95.4% confident)" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:layout_marginTop="8dp">
 
                 <Button
                     android:id="@+id/buttonSpeak"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:text="Speak"/>
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="0dp"/>
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Speak" />
 
                 <Button
                     android:id="@+id/buttonSave"
-                    android:layout_width="0dp"
-                    android:layout_height="44dp"
-                    android:layout_weight="1"
-                    android:text="Save"/>
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Save" />
             </LinearLayout>
         </LinearLayout>
 
@@ -219,27 +169,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="24dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Saved translations"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-                android:textColor="?android:textColorSecondary"/>
+                android:text="History"
+                android:textStyle="bold"
+                android:textSize="16sp" />
 
             <LinearLayout
                 android:id="@+id/historyContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="4dp"/>
+                android:layout_marginTop="8dp" />
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Hidden file picker trigger -->
-    <!-- (we’ll use ACTION_OPEN_DOCUMENT instead) -->
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>
