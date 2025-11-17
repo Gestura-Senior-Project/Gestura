@@ -340,10 +340,7 @@
                     android:layout_weight="1"
                     android:layout_height="wrap_content" />
 
-                <Switch
-                    android:id="@+id/swMaskSync"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+
             </LinearLayout>
 
             <Button

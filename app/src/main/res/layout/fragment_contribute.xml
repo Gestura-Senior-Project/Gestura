@@ -17,6 +17,29 @@
 
         <!-- Optional: you can add a "Show reference video" button here -->
 
+
+        <Button
+            android:id="@+id/buttonShowReference"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Show reference" />
+
+        <TextView
+            android:id="@+id/referenceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reference sign"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <VideoView
+            android:id="@+id/referenceVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="4dp"
+            android:visibility="gone" />
+
+
         <Button
             android:id="@+id/buttonPickVideo"
             android:text="Pick ASL video"

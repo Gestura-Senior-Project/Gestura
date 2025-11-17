@@ -4,79 +4,116 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.Switch
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.navOptions
+import androidx.navigation.fragment.findNavController
+import androidx.lifecycle.lifecycleScope
 import com.example.gestura.R
 import com.example.gestura.util.ThemeHelper
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SettingsFragment : Fragment() {
 
     private val vm: SettingsViewModel by viewModels()
     private val auth by lazy { FirebaseAuth.getInstance() }
+    private val firestore by lazy { Firebase.firestore }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         return inflater.inflate(R.layout.fragment_settings, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        // Profile header
+        // -------- Profile header --------
         val tvName = view.findViewById<TextView>(R.id.tvName)
         val tvEmail = view.findViewById<TextView>(R.id.tvEmail)
         val avatar = view.findViewById<TextView>(R.id.tvAvatarInitial)
 
         val user = auth.currentUser
-        val displayName = user?.displayName ?: user?.email?.substringBefore("@") ?: "—"
+        val email = user?.email
+        val displayName = user?.displayName ?: email?.substringBefore("@") ?: "—"
+
         tvName.text = displayName
-        tvEmail.text = user?.email ?: "—"
+        tvEmail.text = email ?: "—"
         avatar.text = (displayName.firstOrNull() ?: '?').uppercase()
 
-        // Editable profile (local only; wire to backend later)
+        // Editable profile (local only)
         val etName = view.findViewById<EditText>(R.id.etName)
         val etProfileEmail = view.findViewById<EditText>(R.id.etProfileEmail)
         etName.setText(displayName)
-        etProfileEmail.setText(user?.email ?: "")
+        etProfileEmail.setText(email ?: "")
         view.findViewById<View>(R.id.btnSaveProfile).setOnClickListener {
-            Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Profile updated locally (backend sync coming soon)",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
-        // Preferences
+        // -------- Preferences (theme etc) --------
         val spTheme = view.findViewById<Spinner>(R.id.spTheme)
         spTheme.adapter = ArrayAdapter.createFromResource(
-            requireContext(), R.array.settings_themes, android.R.layout.simple_spinner_dropdown_item
+            requireContext(),
+            R.array.settings_themes,
+            android.R.layout.simple_spinner_dropdown_item
         )
 
         vm.theme.observe(viewLifecycleOwner) { theme ->
-            val idx = resources.getStringArray(R.array.settings_themes_values).indexOf(theme)
-            if (idx >= 0 && spTheme.selectedItemPosition != idx) spTheme.setSelection(idx)
+            val values = resources.getStringArray(R.array.settings_themes_values)
+            val idx = values.indexOf(theme)
+            if (idx >= 0 && spTheme.selectedItemPosition != idx) {
+                spTheme.setSelection(idx)
+            }
         }
 
         spTheme.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                val value = resources.getStringArray(R.array.settings_themes_values)[pos] // "light"|"dark"|"auto"
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                v: View?,
+                pos: Int,
+                id: Long
+            ) {
+                val value =
+                    resources.getStringArray(R.array.settings_themes_values)[pos] // "light"|"dark"|"auto"
                 vm.setTheme(value)
-                ThemeHelper.apply(value) // applies Light/Dark/Auto
+                ThemeHelper.apply(value)
             }
+
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // AI Model
+        // -------- Stats views --------
+        val tvContrib = view.findViewById<TextView>(R.id.tvContrib)
+        val tvAccuracy = view.findViewById<TextView>(R.id.tvAccuracy)
+        val tvStatsHint = view.findViewById<TextView>(R.id.tvStatsHint)
+
+        tvContrib.text = "—"
+        tvAccuracy.text = "—"
+        tvStatsHint.text = "Loading your contribution stats…"
+        tvStatsHint.visibility = View.VISIBLE
+
+        // -------- Developer section --------
+        val swDevMode = view.findViewById<Switch>(R.id.swDevMode)
+        val tvDevHint = view.findViewById<TextView>(R.id.tvDevHint)
+        val rowReviewContrib = view.findViewById<View>(R.id.rowReviewContrib)
+
+        swDevMode.isEnabled = false
+        rowReviewContrib.visibility = View.GONE
+        tvDevHint.text = "Connect database to enable"
+
+        // -------- AI Model (stubs) --------
         val swAutoUpdate = view.findViewById<Switch>(R.id.swAutoUpdate)
-        val swMaskSync = view.findViewById<Switch>(R.id.swMaskSync)
         vm.autoUpdate.observe(viewLifecycleOwner) { swAutoUpdate.isChecked = it }
-        vm.maskSync.observe(viewLifecycleOwner) { swMaskSync.isChecked = it }
         swAutoUpdate.setOnCheckedChangeListener { _, b -> vm.setAutoUpdate(b) }
-        swMaskSync.setOnCheckedChangeListener { _, b -> vm.setMaskSync(b) }
 
         view.findViewById<View>(R.id.rowUpdateModel).setOnClickListener {
             Toast.makeText(requireContext(), "Checking for model update…", Toast.LENGTH_SHORT).show()
@@ -85,72 +122,131 @@ class SettingsFragment : Fragment() {
             Toast.makeText(requireContext(), "Syncing masks…", Toast.LENGTH_SHORT).show()
         }
 
-        // Stats + Developer (safe when no DB)
-        val tvContrib = view.findViewById<TextView>(R.id.tvContrib)
-        val tvAccuracy = view.findViewById<TextView>(R.id.tvAccuracy)
-        val tvStatsHint = view.findViewById<TextView>(R.id.tvStatsHint)
-        val tvDevHint = view.findViewById<TextView>(R.id.tvDevHint)
-        val swDevMode = view.findViewById<Switch>(R.id.swDevMode)
-        val rowReview = view.findViewById<View>(R.id.rowReviewContrib)
-
-        fun hasStats(): Boolean = vm.totalContrib.value != null && vm.accuracy.value != null
-        fun qualifies(): Boolean {
-            val c = vm.totalContrib.value ?: return false
-            val a = vm.accuracy.value ?: return false
-            return c >= 47 && a >= 90
-        }
-        fun updateDevVisibility() {
-            val has = hasStats()
-            swDevMode.isEnabled = has && qualifies()
-            tvDevHint.text = if (has) {
-                if (qualifies()) "Review contributions" else "Need ≥47 contributions and ≥90% accuracy"
-            } else {
-                "Connect database to enable"
-            }
-            rowReview.isVisible = swDevMode.isChecked && has
-        }
-        fun updateStatsHint() {
-            val has = hasStats()
-            if (has) {
-                tvStatsHint.text = ""
-                tvStatsHint.visibility = View.GONE
-            } else {
-                tvStatsHint.text = "Connect your database to view stats and unlock Developer Mode."
-                tvStatsHint.visibility = View.VISIBLE
-            }
-        }
-
-        vm.totalContrib.observe(viewLifecycleOwner) { c ->
-            tvContrib.text = c?.toString() ?: "—"
-            updateDevVisibility(); updateStatsHint()
-        }
-        vm.accuracy.observe(viewLifecycleOwner) { a ->
-            tvAccuracy.text = a?.let { "$it%" } ?: "—"
-            updateDevVisibility(); updateStatsHint()
-        }
-        vm.devMode.observe(viewLifecycleOwner) { enabled ->
-            swDevMode.isChecked = enabled
-            rowReview.isVisible = enabled && hasStats()
-        }
-
-        swDevMode.setOnCheckedChangeListener { _, _ -> vm.tryToggleDevMode() }
-        rowReview.setOnClickListener {
-            Toast.makeText(requireContext(), "Open dev review screen (coming soon)", Toast.LENGTH_SHORT).show()
-        }
-
-        // ✅ Logout: sign out + navigate to Login and clear the stack
+        // -------- Logout --------
         view.findViewById<View>(R.id.btnLogout).setOnClickListener {
             auth.signOut()
             Toast.makeText(requireContext(), "Logged out", Toast.LENGTH_SHORT).show()
+            findNavController().navigate(R.id.loginFragment)
+        }
 
-            val navHost = requireActivity()
-                .supportFragmentManager
-                .findFragmentById(R.id.nav_host) as NavHostFragment
-            val nav = navHost.navController
+        // -------- Load stats + gate Dev Mode --------
+        if (email == null) {
+            tvStatsHint.text = "Log in to see your stats."
+            swDevMode.isEnabled = false
+            rowReviewContrib.visibility = View.GONE
+        } else {
+            loadStatsAndDevGate(
+                email = email,
+                tvContrib = tvContrib,
+                tvAccuracy = tvAccuracy,
+                tvStatsHint = tvStatsHint,
+                swDevMode = swDevMode,
+                tvDevHint = tvDevHint,
+                rowReviewContrib = rowReviewContrib
+            )
+        }
 
-            nav.navigate(R.id.loginFragment, null, navOptions {
-                popUpTo(0) { inclusive = true } // clear entire back stack
-            })
+        // Navigate to DevReviewFragment when unlocked + dev mode ON
+        rowReviewContrib.setOnClickListener {
+            findNavController().navigate(R.id.devReviewFragment)
+        }
+    }
+
+    private fun loadStatsAndDevGate(
+        email: String,
+        tvContrib: TextView,
+        tvAccuracy: TextView,
+        tvStatsHint: TextView,
+        swDevMode: Switch,
+        tvDevHint: TextView,
+        rowReviewContrib: View
+    ) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            try {
+                // ---------- Per-user contributions ----------
+                val userAcceptedSnap = firestore
+                    .collection("asl_accepted")
+                    .whereEqualTo("userEmail", email)
+                    .get()
+                    .await()
+
+                val userPendingSnap = firestore
+                    .collection("asl_pending")
+                    .whereEqualTo("userEmail", email)
+                    .get()
+                    .await()
+
+                val userAccepted = userAcceptedSnap.size()
+                val userPending = userPendingSnap.size()
+                val userTotal = userAccepted + userPending
+
+                // Contributions = accepted + pending
+                if (userTotal > 0) {
+                    tvContrib.text = userTotal.toString()
+                    tvStatsHint.visibility = View.GONE
+                } else {
+                    tvContrib.text = "0"
+                    tvStatsHint.text = "Contribute some samples to see stats."
+                    tvStatsHint.visibility = View.VISIBLE
+                }
+
+                // ---------- Accuracy = avg(confidence) of this user's accepted samples ----------
+                if (userAccepted > 0) {
+                    var sum = 0.0
+                    var count = 0
+
+                    for (doc in userAcceptedSnap.documents) {
+                        val c = doc.getDouble("confidence")
+                        if (c != null) {
+                            sum += c
+                            count++
+                        }
+                    }
+
+                    if (count > 0) {
+                        val rawAverage = sum / count.toDouble()
+                        // If confidence stored 0–1, scale to percentage; if already 0–100, leave it.
+                        val percent =
+                            if (rawAverage <= 1.0) rawAverage * 100.0 else rawAverage
+                        tvAccuracy.text = String.format("%.1f%%", percent)
+                    } else {
+                        tvAccuracy.text = "—"
+                    }
+                } else {
+                    tvAccuracy.text = "—"
+                    if (userTotal > 0) {
+                        tvStatsHint.text = "No accepted samples yet – keep contributing!"
+                        tvStatsHint.visibility = View.VISIBLE
+                    }
+                }
+
+                // ---------- Dev Mode unlock: needs at least 90 accepted samples ----------
+                val devUnlocked = userAccepted >= 90
+                swDevMode.isEnabled = devUnlocked
+
+                tvDevHint.text = if (devUnlocked) {
+                    "Developer Mode unlocked – you can review pending contributions."
+                } else {
+                    "Submit at least 90 accepted samples to unlock Developer Mode."
+                }
+
+                // Show/hide review row based on switch + unlock
+                rowReviewContrib.isVisible = devUnlocked && swDevMode.isChecked
+
+                swDevMode.setOnCheckedChangeListener { _, isChecked ->
+                    rowReviewContrib.isVisible = devUnlocked && isChecked
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                tvContrib.text = "—"
+                tvAccuracy.text = "—"
+                tvStatsHint.text = "Error loading stats: ${e.localizedMessage ?: "unknown"}"
+                tvStatsHint.visibility = View.VISIBLE
+                swDevMode.isEnabled = false
+                rowReviewContrib.visibility = View.GONE
+                tvDevHint.text = "Developer Mode unavailable (stats error)."
+            }
         }
     }
 }

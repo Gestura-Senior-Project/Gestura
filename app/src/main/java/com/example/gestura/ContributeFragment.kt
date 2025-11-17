@@ -14,6 +14,9 @@ import androidx.lifecycle.lifecycleScope
 import com.example.gestura.contribute.AslSamplePipeline
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -27,10 +30,16 @@ class ContributeFragment : Fragment() {
         FirebaseFunctions.getInstance("us-central1")
     }
 
+    // Firestore + Storage for reference videos
+    private val firestore by lazy { Firebase.firestore }
+    private val storage by lazy { Firebase.storage }
+
     private var editWord: EditText? = null
     private var buttonPickVideo: Button? = null
     private var buttonSubmit: Button? = null
-    private var videoView: VideoView? = null
+    private var buttonShowReference: Button? = null
+    private var videoView: VideoView? = null           // user’s sample preview
+    private var referenceVideoView: VideoView? = null  // target / reference sign
     private var statusText: TextView? = null
     private var progress: ProgressBar? = null
 
@@ -74,7 +83,9 @@ class ContributeFragment : Fragment() {
         editWord = view.findViewById(R.id.editWord)
         buttonPickVideo = view.findViewById(R.id.buttonPickVideo)
         buttonSubmit = view.findViewById(R.id.buttonSubmit)
+        buttonShowReference = view.findViewById(R.id.buttonShowReference)
         videoView = view.findViewById(R.id.videoView)
+        referenceVideoView = view.findViewById(R.id.referenceVideoView)
         statusText = view.findViewById(R.id.statusText)
         progress = view.findViewById(R.id.progressBar)
 
@@ -84,6 +95,15 @@ class ContributeFragment : Fragment() {
 
         buttonSubmit?.setOnClickListener {
             submitSample()
+        }
+
+        buttonShowReference?.setOnClickListener {
+            val word = editWord?.text?.toString()?.trim()
+            if (word.isNullOrEmpty()) {
+                editWord?.error = "Enter a word first"
+            } else {
+                loadReferenceVideoFor(word)
+            }
         }
     }
 
@@ -109,6 +129,88 @@ class ContributeFragment : Fragment() {
         progress?.visibility = if (loading) View.VISIBLE else View.GONE
         buttonSubmit?.isEnabled = !loading
         buttonPickVideo?.isEnabled = !loading
+        buttonShowReference?.isEnabled = !loading
+    }
+
+    /**
+     * Normalize the word the user typed into a Firestore document ID.
+     * e.g. "Thank you" -> "thank_you"
+     * Make your Firestore doc IDs match this pattern.
+     */
+    private fun normalizeDocId(word: String): String =
+        word.trim()
+            .lowercase()
+            .replace("\\s+".toRegex(), "_")
+
+    /**
+     * Fetch reference video info from:
+     *   Firestore: asl_reference/{docId}
+     *   Field: storagePath: "reference_videos/hello.mp4"
+     * Then load from Firebase Storage and play in referenceVideoView.
+     */
+    private fun loadReferenceVideoFor(displayWord: String) {
+        val docId = normalizeDocId(displayWord)
+
+        lifecycleScope.launch {
+            setLoading(true)
+            try {
+                statusText?.text = "Loading reference for \"$displayWord\"…"
+
+                val doc = firestore
+                    .collection("asl_reference")
+                    .document(docId)
+                    .get()
+                    .await()
+
+                if (!doc.exists()) {
+                    referenceVideoView?.apply {
+                        stopPlayback()
+                        visibility = View.GONE
+                    }
+                    statusText?.text =
+                        "No reference video for \"$displayWord\" yet."
+                    return@launch
+                }
+
+                val storagePath = doc.getString("storagePath")
+
+                if (storagePath.isNullOrEmpty()) {
+                    referenceVideoView?.apply {
+                        stopPlayback()
+                        visibility = View.GONE
+                    }
+                    statusText?.text =
+                        "No reference video path configured for \"$displayWord\"."
+                    return@launch
+                }
+
+                val ref = storage.getReference(storagePath)
+                val url = ref.downloadUrl.await()
+
+                referenceVideoView?.apply {
+                    visibility = View.VISIBLE
+                    setVideoURI(url)
+                    setOnPreparedListener { mp ->
+                        mp.isLooping = true
+                        start()
+                    }
+                }
+
+                statusText?.text =
+                    "Showing reference for \"$displayWord\""
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                referenceVideoView?.apply {
+                    stopPlayback()
+                    visibility = View.GONE
+                }
+                statusText?.text =
+                    "Failed to load reference: ${e.localizedMessage}"
+            } finally {
+                setLoading(false)
+            }
+        }
     }
 
     private fun submitSample() {
@@ -144,6 +246,7 @@ class ContributeFragment : Fragment() {
             try {
                 val pipeline = AslSamplePipeline(requireContext())
                 val result = withContext(Dispatchers.IO) {
+                    // You can pass the typed word into your pipeline
                     pipeline.run(word, videoUri)
                 }
                 pipeline.close()
@@ -164,11 +267,9 @@ class ContributeFragment : Fragment() {
 
                 val data = response.data as? Map<*, *>
                 val status = data?.get("status") as? String
-                val collection =
-                    data?.get("collection") as? String
+                val collection = data?.get("collection") as? String
 
-                statusText?.text =
-                    "Submitted: $status → $collection"
+                statusText?.text = "Submitted: $status → $collection"
                 Toast.makeText(
                     requireContext(),
                     "Sample submitted: $status",
@@ -176,8 +277,7 @@ class ContributeFragment : Fragment() {
                 ).show()
             } catch (e: Exception) {
                 e.printStackTrace()
-                statusText?.text =
-                    "Error: ${e.localizedMessage}"
+                statusText?.text = "Error: ${e.localizedMessage}"
                 Toast.makeText(
                     requireContext(),
                     "Submit failed: ${e.localizedMessage}",

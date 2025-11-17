@@ -43,4 +43,9 @@
         android:id="@+id/settingsFragment"
         android:name="com.example.gestura.settings.SettingsFragment"
         android:label="Settings" />
+    <fragment
+        android:id="@+id/devReviewFragment"
+        android:name="com.example.gestura.dev.DevReviewFragment"
+        android:label="Developer tools" />
+
 </navigation>
