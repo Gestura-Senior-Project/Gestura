@@ -176,7 +176,7 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 ## Completed user stories
 
 **Completed (3/3):**
-*ASL Tab** — Camera preview, capture pipeline, Holistic → LSTM inference  
+- ✅ **ASL Tab** — Camera preview, capture pipeline, Holistic → LSTM inference  
 - ✅ **Contribute Tab** — Upload gesture samples, store metadata, validation  
 - ✅ **Data Backend** — Firestore + Storage + Functions for contributions & model training  
 - ✅ **UI Polish (V1)** — Cleaner typography, spacing, accessibility labels
