@@ -180,8 +180,8 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 - ✅ **Contribute Tab** — Upload gesture samples, store metadata, validation  
 - ✅ **Data Backend** — Firestore + Storage + Functions for contributions & model training  
 - ✅ **UI Polish (V1)** — Cleaner typography, spacing, accessibility labels
-- 
-- **Pending(3/3):**
+  
+**Pending(3/3):**
 - ✅**Avatar Tab** — UI built, connecting to live GenASL endpoint  
 - ✅**Settings Tab** — Profile, accessibility, model updates, dark mode  
 - ✅**Reviewer Mode** — Unlock reviewer view after criteria; triage rejected samples  
@@ -189,10 +189,10 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 ## Build progress (GIFs) 
 
 **ASL Translation Flow (Camera → Landmarks → Text)**
-![ASL Translation](asl.gif)
+![ASL Translation](3.gif)
 
 **Contribution Flow (Upload → Validate → Submit)**
-![Contribute](contribute.gif)
+![Contribute](4.gif)
 
 ## App Demo Video
 
