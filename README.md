@@ -171,18 +171,29 @@ Gestura bridges the communication gap between Deaf and hearing communities throu
 
 ## GitHub Project board
 
-[Add screenshot of your Project Board with the updated status of issues for Milestone 3. Note that these should include the updated issues you worked on for this sprint and not be a duplicate of Milestone 2 Project board.] <img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
+![Milestone Board](milestone3.png)
 
 ## Completed user stories
 
-- List the completed user stories from this unit
-- List any pending user stories / any user stories you decided to cut
-from the original requirements
+**Completed (3/3):**
+- ✅ **ASL Tab** — Camera preview, capture pipeline, Holistic → LSTM inference  
+- ✅ **Contribute Tab** — Upload gesture samples, store metadata, validation  
+- ✅ **Data Backend** — Firestore + Storage + Functions for contributions & model training  
+- ✅ **UI Polish (V1)** — Cleaner typography, spacing, accessibility labels
+  
+**Pending(3/3):**
+- ✅**Avatar Tab** — UI built, connecting to live GenASL endpoint  
+- ✅**Settings Tab** — Profile, accessibility, model updates, dark mode  
+- ✅**Reviewer Mode** — Unlock reviewer view after criteria; triage rejected samples  
 
-[Add video/gif of your current application that shows build progress]
-<img src="YOUR_WIREFRAME_IMAGE_URL" width=600>
+## Build progress (GIFs) 
+
+**ASL Translation Flow (Camera → Landmarks → Text)**
+![ASL Translation](3.gif)
+
+**Contribution Flow (Upload → Validate → Submit)**
+![Contribute](4.gif)
 
 ## App Demo Video
 
-- Embed the YouTube/Vimeo link of your Completed Demo Day prep video
-
+▶️ [Watch the full demo](https://www.canva.com/design/DAG5rJy2Dl8/kSQlA8HvxSn-BRn41vgXGg/watch?utm_content=DAG5rJy2Dl8&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd5119630c7)
