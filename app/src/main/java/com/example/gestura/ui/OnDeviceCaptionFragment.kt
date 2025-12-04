@@ -41,9 +41,13 @@ class OnDeviceCaptionFragment : Fragment() {
     private var confidenceChip: TextView? = null
     private var buttonClear: View? = null
 
+    // Upload buttons now hidden in the layout, we keep references just in case
     private var buttonUploadPrimary: View? = null
     private var buttonUploadSecondary: View? = null
+
+    // Big “Start Camera / Play / Pause” button
     private var buttonPlayPause: TextView? = null
+
     private var buttonSpeak: View? = null
     private var buttonSave: View? = null
 
@@ -105,8 +109,10 @@ class OnDeviceCaptionFragment : Fragment() {
         confidenceChip = view.findViewById(R.id.confidenceChip)
         buttonClear = view.findViewById(R.id.buttonClear)
 
+        // Hidden uploads (kept for safety)
         buttonUploadPrimary = view.findViewById(R.id.buttonUploadPrimary)
         buttonUploadSecondary = view.findViewById(R.id.buttonUploadSecondary)
+
         buttonPlayPause = view.findViewById(R.id.buttonPlayPause) as TextView
         buttonSpeak = view.findViewById(R.id.buttonSpeak)
         buttonSave = view.findViewById(R.id.buttonSave)
@@ -117,14 +123,23 @@ class OnDeviceCaptionFragment : Fragment() {
         historyContainer = view.findViewById(R.id.historyContainer)
 
         setupListeners()
+        updatePlayPauseUi()
     }
 
     private fun setupListeners() {
-        buttonUploadPrimary?.setOnClickListener { launchVideoPicker() }
-        buttonUploadSecondary?.setOnClickListener { launchVideoPicker() }
+        // Old small upload buttons are hidden; we don’t attach listeners anymore.
+        // buttonUploadPrimary?.setOnClickListener { launchVideoPicker() }
+        // buttonUploadSecondary?.setOnClickListener { launchVideoPicker() }
 
+        // Big Start Camera / Play / Pause button
         buttonPlayPause?.setOnClickListener {
-            togglePlayPause()
+            if (videoUri == null) {
+                // First tap → choose video (acts like “Start Camera” for now)
+                launchVideoPicker()
+            } else {
+                // After a video is loaded, it becomes Play / Pause
+                togglePlayPause()
+            }
         }
 
         buttonClear?.setOnClickListener {
@@ -146,6 +161,7 @@ class OnDeviceCaptionFragment : Fragment() {
         videoView?.setOnCompletionListener {
             isPlaying = false
             updatePlayPauseUi()
+            updateCaptionUi()
         }
     }
 
@@ -166,6 +182,8 @@ class OnDeviceCaptionFragment : Fragment() {
         emptyState?.visibility = View.GONE
         buttonClear?.visibility = View.VISIBLE
         currentCaption = null
+        isPlaying = false
+        updatePlayPauseUi()
         updateCaptionUi()
         currentTranslationGroup?.visibility = View.GONE
 
@@ -223,7 +241,11 @@ class OnDeviceCaptionFragment : Fragment() {
     }
 
     private fun updatePlayPauseUi() {
-        buttonPlayPause?.text = if (isPlaying) "Pause" else "Play"
+        buttonPlayPause?.text = when {
+            videoUri == null -> "Start Camera"
+            isPlaying -> "Pause"
+            else -> "Play"
+        }
     }
 
     private fun clearVideo() {
@@ -244,7 +266,8 @@ class OnDeviceCaptionFragment : Fragment() {
         if (caption != null && isPlaying) {
             captionOverlay?.visibility = View.VISIBLE
             captionText?.text = caption.text
-            confidenceChip?.text = String.format(Locale.US, "%.1f%% confident", caption.confidence)
+            confidenceChip?.text =
+                String.format(Locale.US, "%.1f%% confident", caption.confidence)
         } else {
             captionOverlay?.visibility = View.GONE
         }

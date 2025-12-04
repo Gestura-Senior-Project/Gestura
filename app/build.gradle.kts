@@ -100,15 +100,18 @@ dependencies {
     // --- Firebase ---
 
         // Import the BoM for the Firebase platform
-    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation(platform(libs.firebase.bom))
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
 
-        // Add the dependencies for the Firebase products you want to use
+
+    // Add the dependencies for the Firebase products you want to use
         // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-functions-ktx")
-    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation(libs.firebase.analytics)
+    implementation(libs.google.firebase.auth)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.functions)
+    implementation(libs.firebase.storage)
+
 
         // ... add other Firebase dep
 

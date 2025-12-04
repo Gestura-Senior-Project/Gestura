@@ -12,9 +12,9 @@ import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import com.example.gestura.R
 import com.example.gestura.util.ThemeHelper
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -171,7 +171,7 @@ class SettingsFragment : Fragment() {
                     .await()
 
                 val userPendingSnap = firestore
-                    .collection("asl_pending")
+                    .collection("asl_review")
                     .whereEqualTo("userEmail", email)
                     .get()
                     .await()
@@ -221,7 +221,7 @@ class SettingsFragment : Fragment() {
                 }
 
                 // ---------- Dev Mode unlock: needs at least 90 accepted samples ----------
-                val devUnlocked = userAccepted >= 90
+                val devUnlocked = userAccepted >= 5
                 swDevMode.isEnabled = devUnlocked
 
                 tvDevHint.text = if (devUnlocked) {
