@@ -24,6 +24,90 @@ class SettingsFragment : Fragment() {
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val firestore by lazy { Firebase.firestore }
 
+    private fun renderModelStatus(tv: TextView?) {
+        if (tv == null) return
+        val prefs = com.example.gestura.model.ModelPrefs(requireContext())
+
+        val v = prefs.getLocalVersion()
+        val ms = prefs.getLastUpdatedMillis()
+
+        val dateStr = if (ms > 0L) {
+            android.text.format.DateFormat.format("yyyy-MM-dd HH:mm", java.util.Date(ms)).toString()
+        } else "—"
+
+        tv.text = "Model v$v • Last updated: $dateStr"
+    }
+
+
+    private fun downloadModelFromFirebaseWithVersionCheck(
+        tvModelLastUpdated: TextView? = null
+    ) {
+        val ctx = requireContext()
+        val prefs = com.example.gestura.model.ModelPrefs(ctx)
+        val manager = com.example.gestura.model.ModelManager(ctx)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            Toast.makeText(ctx, "Checking for model update…", Toast.LENGTH_SHORT).show()
+
+            try {
+                // 1) Read remote metadata from Firestore: config/model
+                val doc = firestore.collection("config").document("model").get().await()
+                if (!doc.exists()) {
+                    Toast.makeText(ctx, "No model metadata found (config/model).", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
+                val storagePath = doc.getString("storagePath") ?: "models/asl_model.tflite"
+
+                val versionAny = doc.get("version") ?: 0L
+                val remoteVersion = when (versionAny) {
+                    is Long -> versionAny
+                    is Int -> versionAny.toLong()
+                    is Double -> versionAny.toLong()
+                    else -> 0L
+                }
+
+                val updatedAt = doc.getTimestamp("updatedAt")
+                val remoteUpdatedMillis = updatedAt?.toDate()?.time
+
+                // 2) Compare local vs remote
+                val localVersion = prefs.getLocalVersion()
+
+                val hasLocalFile = manager.hasDownloadedModel()
+                val upToDate = hasLocalFile && remoteVersion <= localVersion
+
+                if (upToDate) {
+                    Toast.makeText(ctx, "Model is already up to date (v$localVersion).", Toast.LENGTH_SHORT).show()
+                    renderModelStatus(tvModelLastUpdated)
+                    return@launch
+                }
+
+                // 3) Download from Storage
+                Toast.makeText(ctx, "Downloading model v$remoteVersion…", Toast.LENGTH_SHORT).show()
+
+                manager.downloadLatest(
+                    remotePath = storagePath,
+                    onProgress = { /* optional: update UI */ },
+                    onSuccess = { file ->
+                        // Persist local metadata
+                        prefs.setLocalVersion(remoteVersion)
+                        prefs.setLastUpdatedMillis(remoteUpdatedMillis ?: System.currentTimeMillis())
+
+                        Toast.makeText(ctx, "Model updated to v$remoteVersion.", Toast.LENGTH_LONG).show()
+                        renderModelStatus(tvModelLastUpdated)
+                    },
+                    onError = { e ->
+                        Toast.makeText(ctx, "Model download failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
+                )
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(ctx, "Update check failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -37,8 +121,11 @@ class SettingsFragment : Fragment() {
         val tvName = view.findViewById<TextView>(R.id.tvName)
         val tvEmail = view.findViewById<TextView>(R.id.tvEmail)
         val avatar = view.findViewById<TextView>(R.id.tvAvatarInitial)
+        val tvModelLastUpdated = view.findViewById<TextView>(R.id.tvModelLastUpdated)
+        renderModelStatus(tvModelLastUpdated)
 
-        val user = auth.currentUser
+        val user = FirebaseAuth.getInstance().currentUser
+        android.util.Log.d("AUTH", "user=${user?.uid} email=${user?.email}")
         val email = user?.email
         val displayName = user?.displayName ?: email?.substringBefore("@") ?: "—"
 
@@ -116,8 +203,10 @@ class SettingsFragment : Fragment() {
         swAutoUpdate.setOnCheckedChangeListener { _, b -> vm.setAutoUpdate(b) }
 
         view.findViewById<View>(R.id.rowUpdateModel).setOnClickListener {
-            Toast.makeText(requireContext(), "Checking for model update…", Toast.LENGTH_SHORT).show()
+            downloadModelFromFirebaseWithVersionCheck(tvModelLastUpdated)
         }
+
+
         view.findViewById<View>(R.id.rowSyncMasks).setOnClickListener {
             Toast.makeText(requireContext(), "Syncing masks…", Toast.LENGTH_SHORT).show()
         }

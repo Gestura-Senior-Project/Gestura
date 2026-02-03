@@ -2,13 +2,16 @@ package com.example.gestura.model
 
 import android.content.Context
 import org.tensorflow.lite.Interpreter
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class AslSequenceClassifier(
-    context: Context,
+    private val context: Context,
     modelAssetPath: String = "asl_model.tflite",
-    labelsAssetPath: String = "gloss_lables.txt"
+    labelsAssetPath: String = "gloss_lables.txt",
+    // Where the downloaded model will live (matches ModelManager pattern)
+    localModelRelativePath: String = "models/asl_model.tflite"
 ) {
 
     companion object {
@@ -23,21 +26,29 @@ class AslSequenceClassifier(
     init {
         val assetManager = context.assets
 
-        // Load TFLite model
-        val modelBuffer = assetManager.open(modelAssetPath).use { input ->
-            val bytes = input.readBytes()
-            ByteBuffer.allocateDirect(bytes.size).apply {
-                order(ByteOrder.nativeOrder())
-                put(bytes)
-                rewind()
-            }
+        // Prefer local downloaded model if it exists; otherwise fallback to assets.
+        val localModelFile = File(context.filesDir, localModelRelativePath)
+
+        val modelBytes: ByteArray = if (localModelFile.exists() && localModelFile.length() > 0L) {
+            localModelFile.readBytes()
+        } else {
+            assetManager.open(modelAssetPath).use { it.readBytes() }
+        }
+
+        val modelBuffer = ByteBuffer.allocateDirect(modelBytes.size).apply {
+            order(ByteOrder.nativeOrder())
+            put(modelBytes)
+            rewind()
         }
 
         interpreter = Interpreter(modelBuffer)
 
-        // Load labels
+        // Load labels (still from assets; you can also override similarly if desired)
         labels = assetManager.open(labelsAssetPath).use { input ->
-            input.bufferedReader().readLines().map { it.trim() }.filter { it.isNotEmpty() }
+            input.bufferedReader()
+                .readLines()
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
         }
 
         require(labels.size == NUM_CLASSES) {
@@ -89,7 +100,6 @@ class AslSequenceClassifier(
         }
 
         val bestLabel = labels[bestIdx]
-
         val all = probs.mapIndexed { i, p -> labels[i] to p }
 
         return Result(

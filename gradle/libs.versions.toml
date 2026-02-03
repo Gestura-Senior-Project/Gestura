@@ -24,6 +24,8 @@ constraintlayout = "2.2.1"
 lifecycleLivedataKtx = "2.10.0"
 genaiCommon = "1.0.0-beta2"
 roomExternalAntlr = "2.8.4"
+navigationFragmentKtx = "2.9.7"
+navigationUiKtx = "2.9.7"
 
 
 [libraries]
@@ -63,6 +65,8 @@ androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecy
 genai-common = { group = "com.google.mlkit", name = "genai-common", version.ref = "genaiCommon" }
 translated-lara-sdk = { module = "com.translated:lara-sdk", version.ref = "laraSdkVersion" }
 androidx-room-external-antlr = { group = "androidx.room", name = "room-external-antlr", version.ref = "roomExternalAntlr" }
+navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigationFragmentKtx" }
+navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigationUiKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

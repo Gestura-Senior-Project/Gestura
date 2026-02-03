@@ -132,6 +132,10 @@ dependencies {
     // --- Other (keep only if actually used) ---
     implementation(libs.genai.common)
     implementation(libs.androidx.room.external.antlr)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.navigation.fragment.ktx)
+    implementation(libs.navigation.ui.ktx)
 
     // --- Tests ---
     testImplementation(libs.junit)
@@ -143,6 +147,8 @@ dependencies {
 
 
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
 
 }
