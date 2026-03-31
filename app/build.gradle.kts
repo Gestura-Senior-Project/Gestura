@@ -99,13 +99,14 @@ dependencies {
 
     // --- Firebase ---
 
-        // Import the BoM for the Firebase platform
+    // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))
-    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
 
 
     // Add the dependencies for the Firebase products you want to use
-        // When using the BoM, you don't specify versions in Firebase library dependencies
+    // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.analytics)
     implementation(libs.google.firebase.auth)
     implementation(libs.firebase.firestore)
@@ -152,4 +153,3 @@ dependencies {
 
 
 }
-

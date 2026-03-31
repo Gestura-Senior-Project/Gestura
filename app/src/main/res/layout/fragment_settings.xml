@@ -114,16 +114,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <TextView
-                    android:id="@+id/tvAvatarInitial"
-                    android:text="G"
-                    android:textColor="@android:color/white"
-                    android:gravity="center"
-                    android:textSize="20sp"
-                    android:background="#5667FF"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp" />
-
                 <LinearLayout
                     android:orientation="vertical"
                     android:layout_marginStart="12dp"
@@ -145,6 +135,16 @@
                         android:textColor="@android:color/darker_gray"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/tvAvatarInitial"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:background="#5667FF"
+                        android:gravity="center"
+                        android:text="G"
+                        android:textColor="@android:color/white"
+                        android:textSize="20sp" />
                 </LinearLayout>
             </LinearLayout>
 

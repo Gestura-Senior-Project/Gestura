@@ -30,7 +30,8 @@ class AslSamplePipeline(
         val word: String,
         val predictedLabel: String,
         val confidence: Float,   // 0–100
-        val keypoints: FloatArray
+        val keypoints: FloatArray,
+        val videoUri: Uri
     )
 
     fun run(word: String, videoUri: Uri): SampleResult {
@@ -51,7 +52,8 @@ class AslSamplePipeline(
             word = word,
             predictedLabel = result.label,
             confidence = result.confidence * 100f,
-            keypoints = features
+            keypoints = features,
+            videoUri = videoUri
         )
     }
 

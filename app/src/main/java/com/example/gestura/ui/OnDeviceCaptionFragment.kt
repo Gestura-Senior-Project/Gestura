@@ -22,6 +22,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import com.example.gestura.contribute.AslSamplePipeline
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 data class Caption(
     val timeSec: Float,
@@ -33,6 +39,14 @@ data class Caption(
  * On-device ASL video → caption UI fragment.
  */
 class OnDeviceCaptionFragment : Fragment() {
+    private val firestore by lazy { FirebaseFirestore.getInstance() }
+    private val storage by lazy { FirebaseStorage.getInstance() }
+
+    private companion object {
+        const val REJECT_THRESHOLD = 85f
+        const val REJECT_COLLECTION = "asl_review"
+        const val REJECT_VIDEO_FOLDER = "asl_rejected_videos"
+    }
 
     private var videoView: VideoView? = null
     private var emptyState: View? = null
@@ -190,24 +204,35 @@ class OnDeviceCaptionFragment : Fragment() {
         // Run ASL model in background
         classifyVideo(uri)
     }
-
     private fun classifyVideo(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val predictor = AslVideoPredictor(requireContext())
-                val result = predictor.predictFromVideo(uri)
-                predictor.close()
+                val pipeline = AslSamplePipeline(requireContext())
+                val sample = pipeline.run(word = "unknown", videoUri = uri)
+                pipeline.close()
 
                 val caption = Caption(
                     timeSec = 0.5f,
-                    text = result.label,
-                    confidence = result.confidence * 100f
+                    text = sample.predictedLabel,
+                    confidence = sample.confidence
                 )
+
+                if (sample.confidence < REJECT_THRESHOLD) {
+                    saveRejectedSample(sample)
+                }
 
                 withContext(Dispatchers.Main) {
                     currentCaption = caption
                     updateCaptionUi()
                     updateCurrentTranslationUi()
+
+                    if (sample.confidence < REJECT_THRESHOLD) {
+                        Toast.makeText(
+                            requireContext(),
+                            "Low confidence sample saved to rejected table",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -222,6 +247,41 @@ class OnDeviceCaptionFragment : Fragment() {
         }
     }
 
+    private suspend fun saveRejectedSample(sample: AslSamplePipeline.SampleResult) {
+        val (storagePath, downloadUrl) = uploadRejectedVideo(sample.videoUri)
+
+        val rejectDoc = hashMapOf(
+            "word" to sample.word,
+            "predictedLabel" to sample.predictedLabel,
+            "confidence" to sample.confidence,
+            "videoUrl" to downloadUrl,
+            "videoStoragePath" to storagePath,
+            "keypoints" to sample.keypoints.toList(),
+            "status" to "rejected",
+            "reason" to "LOW_CONFIDENCE",
+            "createdAt" to FieldValue.serverTimestamp()
+        )
+
+        firestore.collection(REJECT_COLLECTION)
+            .add(rejectDoc)
+            .await()
+    }
+
+    private suspend fun uploadRejectedVideo(videoUri: Uri): Pair<String, String> {
+        val ext = requireContext().contentResolver.getType(videoUri)
+            ?.substringAfterLast("/")
+            ?.ifBlank { "mp4" }
+            ?: "mp4"
+
+        val fileName = "${UUID.randomUUID()}.$ext"
+        val storagePath = "$REJECT_VIDEO_FOLDER/$fileName"
+        val ref = storage.reference.child(storagePath)
+
+        ref.putFile(videoUri).await()
+        val downloadUrl = ref.downloadUrl.await().toString()
+
+        return storagePath to downloadUrl
+    }
     private fun togglePlayPause() {
         val vv = videoView ?: return
         if (videoUri == null) {

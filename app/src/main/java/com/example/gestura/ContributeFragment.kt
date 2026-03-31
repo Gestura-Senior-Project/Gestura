@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,6 +23,7 @@ import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withContext
 
 class ContributeFragment : Fragment() {
@@ -227,17 +229,17 @@ class ContributeFragment : Fragment() {
     // --------------------------------------------------------------------
     //  Submit sample (unchanged)
     // --------------------------------------------------------------------
+    private fun normalizeWord(value: String): String {
+        return value.trim().lowercase().replace("\\s+".toRegex(), "_")
+    }
+
     private fun submitSample() {
         val email = auth.currentUser?.email
         val word = editWord?.text?.toString()?.trim()
         val videoUri = selectedVideoUri
 
         if (email.isNullOrBlank()) {
-            Toast.makeText(
-                requireContext(),
-                "You must be logged in",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "You must be logged in", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -247,11 +249,7 @@ class ContributeFragment : Fragment() {
         }
 
         if (videoUri == null) {
-            Toast.makeText(
-                requireContext(),
-                "Select a video first",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "Select a video first", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -264,12 +262,24 @@ class ContributeFragment : Fragment() {
                 }
                 pipeline.close()
 
+                val typedWord = word
+                val predictedWord = result.predictedLabel
+
+                val typedNorm = normalizeWord(typedWord)
+                val predictedNorm = normalizeWord(predictedWord)
+                val isMismatch = typedNorm != predictedNorm
+
+                val (storagePath, downloadUrl) = uploadContributionVideo(videoUri, typedWord)
                 val payload = hashMapOf(
-                    "word" to result.word,
-                    "predictedLabel" to result.predictedLabel,
+                    "word" to typedWord,
+                    "typedWord" to typedWord,
+                    "predictedLabel" to predictedWord,
                     "confidence" to result.confidence,
                     "keypoints" to result.keypoints.toList(),
-                    "userEmail" to email
+                    "videoUrl" to downloadUrl,
+                    "videoStoragePath" to storagePath,
+                    "userEmail" to email,
+                    "isMismatch" to isMismatch
                 )
 
                 val response = functions
@@ -282,26 +292,41 @@ class ContributeFragment : Fragment() {
                 val collection = data?.get("collection") as? String
 
                 statusText?.text = "Submitted: $status → $collection"
-                Toast.makeText(
-                    requireContext(),
-                    "Sample submitted: $status",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Sample submitted: $status", Toast.LENGTH_SHORT).show()
 
-                // 🔁 Reload stats after a successful submission
                 loadUserContributions()
             } catch (e: Exception) {
                 e.printStackTrace()
                 statusText?.text = "Error: ${e.localizedMessage}"
-                Toast.makeText(
-                    requireContext(),
-                    "Submit failed: ${e.localizedMessage}",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(requireContext(), "Submit failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             } finally {
                 setLoading(false)
             }
         }
+    }
+    private suspend fun uploadContributionVideo(
+        videoUri: Uri,
+        word: String
+    ): Pair<String, String> {
+        val uid = auth.currentUser?.uid
+            ?: throw IllegalStateException("User is not logged in")
+
+        val safeWord = word.trim().lowercase().replace("\\s+".toRegex(), "_")
+        val fileName = "${System.currentTimeMillis()}_${safeWord}.mp4"
+        val storagePath = "contributions/$uid/$fileName"
+
+        val ref = storage.reference.child(storagePath)
+
+        Log.d("UPLOAD", "Starting upload to $storagePath")
+
+        withTimeout(30000) {
+            ref.putFile(videoUri).await()
+        }
+
+        Log.d("UPLOAD", "Upload complete")
+
+        val downloadUrl = ref.downloadUrl.await().toString()
+        return storagePath to downloadUrl
     }
 
     // --------------------------------------------------------------------
