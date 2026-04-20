@@ -1,11 +1,11 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base app theme -->
+
     <style name="Base.Theme.Gestura" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- common overrides -->
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorSurface">@android:color/white</item>
+        <item name="colorOnSurface">@android:color/black</item>
     </style>
 
-    <!-- Public theme name referenced by the manifest -->
-    <style name="Theme.Gestura" parent="Base.Theme.Gestura"/>
+    <style name="Theme.Gestura" parent="Base.Theme.Gestura" />
 </resources>

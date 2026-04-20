@@ -1,30 +1,31 @@
 package com.example.gestura.settings
 
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val auth = FirebaseAuth.getInstance()
     private val db = FirebaseFirestore.getInstance()
+    private val prefs = application.getSharedPreferences("gestura_settings", Context.MODE_PRIVATE)
 
-    // --- Theme prefs (same as before) ---
-    private val _theme = MutableLiveData("auto")   // "light" | "dark" | "auto"
+    private val _theme = MutableLiveData(prefs.getString("theme", "auto") ?: "auto")
     val theme: LiveData<String> = _theme
 
-    private val _autoUpdate = MutableLiveData(true)
+    private val _autoUpdate = MutableLiveData(prefs.getBoolean("auto_update", true))
     val autoUpdate: LiveData<Boolean> = _autoUpdate
 
-    private val _maskSync = MutableLiveData(false)
+    private val _maskSync = MutableLiveData(prefs.getBoolean("mask_sync", false))
     val maskSync: LiveData<Boolean> = _maskSync
 
-    // --- Stats & Dev mode ---
     private val _totalContrib = MutableLiveData<Int?>()
     val totalContrib: LiveData<Int?> = _totalContrib
 
@@ -38,26 +39,23 @@ class SettingsViewModel : ViewModel() {
     val devMode: LiveData<Boolean> = _devMode
 
     init {
-        // Load stats whenever the VM is created
         loadStatsForCurrentUser()
     }
 
-    // -------- Theme / toggles ----------
-
     fun setTheme(value: String) {
-        // "light" | "dark" | "auto"
         _theme.value = value
+        prefs.edit().putString("theme", value).apply()
     }
 
     fun setAutoUpdate(enabled: Boolean) {
         _autoUpdate.value = enabled
+        prefs.edit().putBoolean("auto_update", enabled).apply()
     }
 
     fun setMaskSync(enabled: Boolean) {
         _maskSync.value = enabled
+        prefs.edit().putBoolean("mask_sync", enabled).apply()
     }
-
-    // -------- Stats / Dev mode ----------
 
     fun loadStatsForCurrentUser() {
         val email = auth.currentUser?.email
@@ -71,7 +69,6 @@ class SettingsViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Count accepted and pending docs for this userEmail
                 val acceptedSnap = db.collection("asl_accepted")
                     .whereEqualTo("userEmail", email)
                     .get()
@@ -84,25 +81,16 @@ class SettingsViewModel : ViewModel() {
 
                 val acceptedCount = acceptedSnap.size()
                 val pendingCount = pendingSnap.size()
-
-                // Total contributions = accepted + pending
                 val total = acceptedCount + pendingCount
-                _totalContrib.value = if (total > 0) total else null
 
-                // ✅ Accuracy: approved / total * 100
-                // Example: 45 accepted out of 47 total => 95.7%
-                val accuracyPct: Double? =
-                    if (total > 0) {
-                        (acceptedCount.toDouble() / total.toDouble()) * 100.0
-                    } else {
-                        null
-                    }
-                _accuracy.value = accuracyPct
+                _totalContrib.value = total
 
-                // ✅ Dev available if this userEmail appears >= 90 times in asl_accepted
-                _devAvailable.value = (acceptedCount >= 90)
+                _accuracy.value =
+                    if (total > 0) (acceptedCount.toDouble() / total.toDouble()) * 100.0
+                    else null
 
-                // If dev no longer available, force-disable devMode
+                _devAvailable.value = acceptedCount >= 90
+
                 if (acceptedCount < 90) {
                     _devMode.value = false
                 }
@@ -117,7 +105,6 @@ class SettingsViewModel : ViewModel() {
     }
 
     fun tryToggleDevMode() {
-        // Dev mode can only be toggled if user qualifies
         if (_devAvailable.value == true) {
             _devMode.value = !(_devMode.value ?: false)
         }
