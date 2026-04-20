@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="160dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="10dp"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="160dp"
+        android:layout_height="100dp"
+        android:background="@drawable/bg_input">
+
+        <VideoView
+            android:id="@+id/itemVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <View
+            android:id="@+id/itemVideoOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#22000000" />
+
+        <TextView
+            android:id="@+id/textDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="6dp"
+            android:background="@drawable/bg_confidence_chip"
+            android:paddingStart="6dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="6dp"
+            android:paddingBottom="2dp"
+            android:text="0:05"
+            android:textColor="@android:color/white"
+            android:textSize="10sp" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/textName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="video.mp4"
+        android:textColor="#1E1E1E"
+        android:textSize="11sp" />
+</LinearLayout>
