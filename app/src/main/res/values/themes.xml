@@ -1,10 +1,24 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-
+    <!-- Base application theme. -->
     <style name="Base.Theme.Gestura" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/purple_500</item>
-        <item name="colorOnPrimary">@android:color/white</item>
-        <item name="colorSurface">@android:color/white</item>
-        <item name="colorOnSurface">@android:color/black</item>
+        <!-- Brand colors from screenshots. -->
+        <item name="colorPrimary">@color/primary_purple</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/primary_dark_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Status bar. -->
+        <item name="android:statusBarColor">@color/app_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Background/Surface colors -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="colorSurface">@color/card_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>
 
     <style name="Theme.Gestura" parent="Base.Theme.Gestura" />

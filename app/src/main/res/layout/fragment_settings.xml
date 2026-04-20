@@ -1,414 +1,375 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:background="?android:attr/windowBackground">
 
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:padding="20dp">
 
         <!-- Header -->
         <TextView
             android:text="Settings"
             android:textStyle="bold"
-            android:textSize="20sp"
+            android:textSize="24sp"
+            android:textColor="?android:attr/textColorPrimary"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <!-- Stats Card -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="Your Stats"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:layout_marginTop="8dp"
-                android:orientation="horizontal"
-                android:weightSum="2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:padding="12dp"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:text="Contributions"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/tvContrib"
-                        android:text="—"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:padding="12dp"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content">
-
-                    <TextView
-                        android:text="Accuracy"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-
-                    <TextView
-                        android:id="@+id/tvAccuracy"
-                        android:text="—"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvStatsHint"
-                android:text="Connect database to enable"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="6dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
 
         <!-- Profile Card -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
 
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Email"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/etProfileEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_input"
+                    android:paddingHorizontal="12dp"
+                    android:inputType="textEmailAddress"
+                    android:textColor="?android:attr/textColorPrimary" />
+
+                <Button
+                    android:id="@+id/btnSaveProfile"
+                    android:text="Save Changes"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_primary_button"
+                    android:textAllCaps="false"
+                    android:textStyle="bold" />
+
+                <!-- Hidden views for compatibility -->
+                <TextView android:id="@+id/tvAvatarInitial" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+                <TextView android:id="@+id/tvName" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+                <TextView android:id="@+id/tvEmail" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+                <EditText android:id="@+id/etName" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Stats Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="Your Progress"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:layout_marginTop="16dp"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tvContrib"
+                            android:text="0"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorPrimary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:text="Contributions"
+                            android:textSize="12sp"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/tvAccuracy"
+                            android:text="0%"
+                            android:textSize="24sp"
+                            android:textStyle="bold"
+                            android:textColor="?attr/colorPrimary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            android:text="Accuracy"
+                            android:textSize="12sp"
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvStatsHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:text="Loading stats…"
+                    android:textSize="12sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Preferences -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:text="App Preferences"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="16dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:text="System Theme"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+
+                    <Spinner
+                        android:id="@+id/spTheme"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- AI Model Section -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="16dp"
+                    android:background="?android:attr/dividerVertical" />
+
+                <TextView
+                    android:text="AI Model"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:id="@+id/rowUpdateModel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingVertical="8dp">
+
+                    <TextView
+                        android:text="Update Model"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/tvModelLastUpdated"
+                        android:text="Model v1 • Last updated: —"
+                        android:textSize="12sp"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:text="Auto-update on Wi-Fi"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+
+                    <Switch
+                        android:id="@+id/swAutoUpdate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/rowSyncMasks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingVertical="8dp"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:text="Sync Segmentation Masks"
+                        android:textSize="14sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Developer Mode -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="?attr/colorSurface">
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:padding="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <LinearLayout
-                    android:orientation="vertical"
-                    android:layout_marginStart="12dp"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
                     <TextView
-                        android:id="@+id/tvName"
-                        android:text="—"
+                        android:text="Developer Mode"
                         android:textStyle="bold"
-                        android:layout_width="wrap_content"
+                        android:textSize="16sp"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content" />
 
-                    <TextView
-                        android:id="@+id/tvEmail"
-                        android:text="—"
-                        android:textSize="12sp"
-                        android:textColor="@android:color/darker_gray"
+                    <Switch
+                        android:id="@+id/swDevMode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvDevHint"
+                    android:text="Submit at least 90 accepted samples to unlock."
+                    android:textSize="12sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:id="@+id/rowReviewContrib"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingVertical="12dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone">
 
                     <TextView
-                        android:id="@+id/tvAvatarInitial"
-                        android:layout_width="56dp"
-                        android:layout_height="56dp"
-                        android:background="#5667FF"
-                        android:gravity="center"
-                        android:text="G"
-                        android:textColor="@android:color/white"
-                        android:textSize="20sp" />
+                        android:text="Review Pending Contributions"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="?attr/colorPrimary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
                 </LinearLayout>
             </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="12dp"
-                android:background="@android:color/darker_gray" />
-
-            <TextView
-                android:text="Full Name"
-                android:textSize="12sp"
-                android:layout_marginTop="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/etName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:text="Email"
-                android:textSize="12sp"
-                android:layout_marginTop="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/etProfileEmail"
-                android:inputType="textEmailAddress"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <Button
-                android:id="@+id/btnSaveProfile"
-                android:text="Save Changes"
-                android:layout_marginTop="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <!-- Preferences -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="Preferences"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="Theme"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-
-                <Spinner
-                    android:id="@+id/spTheme"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Developer -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="Developer"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="Developer Mode"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-
-                <Switch
-                    android:id="@+id/swDevMode"
-                    android:enabled="false"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvDevHint"
-                android:text="Connect database to enable"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="4dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:id="@+id/rowReviewContrib"
-                android:visibility="gone"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingTop="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="Review Contributions"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- AI Model -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="AI Model"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="Auto Update"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-
-                <Switch
-                    android:id="@+id/swAutoUpdate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/rowUpdateModel"
-                android:text="Update Model"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                android:id="@+id/tvModelLastUpdated"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Model: —"
-                android:textSize="12sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="4dp" />
-
-            <Button
-                android:id="@+id/rowSyncMasks"
-                android:text="Sync Masks"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
-
-        <!-- About -->
-        <LinearLayout
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:background="@android:color/white"
-            android:layout_marginTop="12dp"
-            android:elevation="2dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="About"
-                android:textStyle="bold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="App Version"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:id="@+id/tvAppVersion"
-                    android:text="ASL-v3.2.0"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_marginTop="6dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:text="Last Updated"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content" />
-
-                <TextView
-                    android:id="@+id/tvLastUpdatedValue"
-                    android:text="—"
-                    android:textColor="@android:color/darker_gray"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
-        </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- Logout -->
         <Button
             android:id="@+id/btnLogout"
-            android:text="Logout"
-            android:layout_marginTop="12dp"
+            android:text="Log Out"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
             android:backgroundTint="@android:color/holo_red_dark"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="56dp"
+            android:textAllCaps="false"
+            android:textStyle="bold" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

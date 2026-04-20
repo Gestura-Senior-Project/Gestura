@@ -1,11 +1,23 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-
+    <!-- Base application theme for Night mode. -->
     <style name="Base.Theme.Gestura" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/purple_200</item>
-        <item name="colorOnPrimary">@android:color/black</item>
-        <item name="colorSurface">#121212</item>
-        <item name="colorOnSurface">@android:color/white</item>
-    </style>
+        <!-- Use the new brand colors -->
+        <item name="colorPrimary">@color/primary_purple</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/primary_dark_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
 
-    <style name="Theme.Gestura" parent="Base.Theme.Gestura" />
+        <!-- Status bar. -->
+        <item name="android:statusBarColor">@color/primary_dark_blue</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Background/Surface colors -->
+        <item name="android:windowBackground">@color/primary_dark_blue</item>
+        <item name="colorSurface">#1C1B1F</item>
+        <item name="colorOnSurface">#E6E1E5</item>
+
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">#E6E1E5</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
 </resources>

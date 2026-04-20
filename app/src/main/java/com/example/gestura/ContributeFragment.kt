@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.gestura.contribute.AslSamplePipeline
@@ -64,11 +65,15 @@ class ContributeFragment : Fragment() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
-                    requireContext().contentResolver
-                        .takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
+                    try {
+                        requireContext().contentResolver
+                            .takePersistableUriPermission(
+                                uri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                    } catch (e: SecurityException) {
+                        Log.e("ContributeFragment", "Failed to take persistable URI permission", e)
+                    }
                     onVideoSelected(uri)
                 }
             }
@@ -121,7 +126,7 @@ class ContributeFragment : Fragment() {
             }
         }
 
-        // 🔥 load real stats + contributions whenever screen opens
+        // load real stats + contributions whenever screen opens
         loadUserContributions()
     }
 
@@ -154,7 +159,7 @@ class ContributeFragment : Fragment() {
     }
 
     // --------------------------------------------------------------------
-    //  Reference video (same as before)
+    //  Reference video
     // --------------------------------------------------------------------
     private fun normalizeDocId(word: String): String =
         word.trim()
@@ -227,7 +232,7 @@ class ContributeFragment : Fragment() {
     }
 
     // --------------------------------------------------------------------
-    //  Submit sample (unchanged)
+    //  Submit sample
     // --------------------------------------------------------------------
     private fun normalizeWord(value: String): String {
         return value.trim().lowercase().replace("\\s+".toRegex(), "_")
@@ -330,7 +335,7 @@ class ContributeFragment : Fragment() {
     }
 
     // --------------------------------------------------------------------
-    //  NEW: Real stats + “Your Contributions” list
+    //  Real stats + “Your Contributions” list
     // --------------------------------------------------------------------
 
     private data class UserContribution(
@@ -353,7 +358,6 @@ class ContributeFragment : Fragment() {
         lifecycleScope.launch {
             setLoading(true)
             try {
-                // 🔁 same idea as SettingsViewModel.loadStatsForCurrentUser()
                 val acceptedSnap = firestore.collection("asl_accepted")
                     .whereEqualTo("userEmail", email)
                     .get()
@@ -396,7 +400,6 @@ class ContributeFragment : Fragment() {
         val list = mutableListOf<UserContribution>()
         for (doc in snap.documents) {
             val word = doc.getString("word") ?: "(unknown)"
-            // ⚠️ adjust "createdAt" if your field name is different
             val ts = doc.getTimestamp("createdAt")
             list += UserContribution(
                 word = word,
@@ -445,13 +448,12 @@ class ContributeFragment : Fragment() {
 
             dateText.text = dateStr
 
-            // tiny visual tweak for status color
-            val chipBg = if (item.isApproved) {
-                R.drawable.a   // you can create these shapes
+            // Use a color or a background that exists
+            if (item.isApproved) {
+                statusChip.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark))
             } else {
-                R.drawable.b
+                statusChip.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark))
             }
-            statusChip.setBackgroundResource(chipBg)
 
             container.addView(row)
         }
