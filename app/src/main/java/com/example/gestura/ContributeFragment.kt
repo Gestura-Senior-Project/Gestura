@@ -1,9 +1,16 @@
 package com.example.gestura
 
+import android.Manifest
 import android.app.Activity
+import android.content.ContentUris
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.media.ThumbnailUtils
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -13,6 +20,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSnapHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.gestura.contribute.AslSamplePipeline
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -26,6 +36,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withContext
+
+data class RecentVideoItem(
+    val uri: Uri,
+    val name: String,
+    val durationMs: Long
+)
 
 class ContributeFragment : Fragment() {
 
@@ -56,7 +72,16 @@ class ContributeFragment : Fragment() {
     // contributions list
     private var contributionsContainer: LinearLayout? = null
 
+    // Recent videos (same as ASL tab)
+    private var recyclerRecentVideos: RecyclerView? = null
+    private lateinit var recentVideosAdapter: RecentVideosAdapter
+    private val snapHelper = LinearSnapHelper()
+
     private var selectedVideoUri: Uri? = null
+
+    private companion object {
+        const val MAX_RECENT_VIDEOS = 20
+    }
 
     private val pickVideoLauncher =
         registerForActivityResult(
@@ -76,6 +101,15 @@ class ContributeFragment : Fragment() {
                     }
                     onVideoSelected(uri)
                 }
+            }
+        }
+
+    private val requestVideoPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                loadRecentVideos()
+            } else {
+                Toast.makeText(requireContext(), "Permission denied. Cannot load recent videos.", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -115,6 +149,9 @@ class ContributeFragment : Fragment() {
         // list container
         contributionsContainer = view.findViewById(R.id.contributionsContainer)
 
+        // Recent videos
+        recyclerRecentVideos = view.findViewById(R.id.recyclerRecentVideos)
+
         buttonPickVideo?.setOnClickListener { launchVideoPicker() }
         buttonSubmit?.setOnClickListener { submitSample() }
         buttonShowReference?.setOnClickListener {
@@ -126,8 +163,51 @@ class ContributeFragment : Fragment() {
             }
         }
 
-        // load real stats + contributions whenever screen opens
+        setupRecentVideosRecycler()
+        loadRecentVideosWithPermission()
         loadUserContributions()
+    }
+
+    private fun setupRecentVideosRecycler() {
+        recentVideosAdapter = RecentVideosAdapter(
+            onClick = { item ->
+                onVideoSelected(item.uri)
+            }
+        )
+        recyclerRecentVideos?.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        recyclerRecentVideos?.adapter = recentVideosAdapter
+        snapHelper.attachToRecyclerView(recyclerRecentVideos)
+    }
+
+    private fun loadRecentVideosWithPermission() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) Manifest.permission.READ_MEDIA_VIDEO else Manifest.permission.READ_EXTERNAL_STORAGE
+        if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
+            loadRecentVideos()
+        } else {
+            requestVideoPermissionLauncher.launch(permission)
+        }
+    }
+
+    private fun loadRecentVideos() {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val videos = mutableListOf<RecentVideoItem>()
+            val projection = arrayOf(MediaStore.Video.Media._ID, MediaStore.Video.Media.DISPLAY_NAME, MediaStore.Video.Media.DURATION)
+            val cursor = requireContext().contentResolver.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, projection, null, null, "${MediaStore.Video.Media.DATE_ADDED} DESC")
+            cursor?.use {
+                val idCol = it.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+                val nameCol = it.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
+                val durationCol = it.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
+                var count = 0
+                while (it.moveToNext() && count < MAX_RECENT_VIDEOS) {
+                    val uri = ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, it.getLong(idCol))
+                    videos.add(RecentVideoItem(uri, it.getString(nameCol), it.getLong(durationCol)))
+                    count++
+                }
+            }
+            withContext(Dispatchers.Main) {
+                recentVideosAdapter.submitList(videos)
+            }
+        }
     }
 
     // --------------------------------------------------------------------
@@ -146,7 +226,9 @@ class ContributeFragment : Fragment() {
         videoView?.apply {
             visibility = View.VISIBLE
             setVideoURI(uri)
-            seekTo(1)
+            setOnPreparedListener { mp ->
+                mp.seekTo(1)
+            }
         }
         statusText?.text = "Video selected"
     }
@@ -261,6 +343,7 @@ class ContributeFragment : Fragment() {
         lifecycleScope.launch {
             setLoading(true)
             try {
+                // pipeline.run sends the video to the extraction server (http://10.0.2.2:8000/extract)
                 val pipeline = AslSamplePipeline(requireContext())
                 val result = withContext(Dispatchers.IO) {
                     pipeline.run(word, videoUri)
@@ -274,7 +357,10 @@ class ContributeFragment : Fragment() {
                 val predictedNorm = normalizeWord(predictedWord)
                 val isMismatch = typedNorm != predictedNorm
 
+                // Standard contribution path: Upload the video to Firebase Storage
                 val (storagePath, downloadUrl) = uploadContributionVideo(videoUri, typedWord)
+                
+                // Dev payload structure to match standard Contribute payload exactly (as seen in Screenshot 2)
                 val payload = hashMapOf(
                     "word" to typedWord,
                     "typedWord" to typedWord,
@@ -283,7 +369,9 @@ class ContributeFragment : Fragment() {
                     "keypoints" to result.keypoints.toList(),
                     "videoUrl" to downloadUrl,
                     "videoStoragePath" to storagePath,
-                    "userEmail" to email,
+                    "userEmail" to "admin@gmail.com",
+                    "status" to "accepted",
+                    "createdAt" to System.currentTimeMillis(),
                     "isMismatch" to isMismatch
                 )
 
@@ -358,13 +446,16 @@ class ContributeFragment : Fragment() {
         lifecycleScope.launch {
             setLoading(true)
             try {
+                // Check for both the logged in user and the dev admin email
+                val emailQueryList = listOfNotNull(email, "admin@gmail.com").distinct()
+
                 val acceptedSnap = firestore.collection("asl_accepted")
-                    .whereEqualTo("userEmail", email)
+                    .whereIn("userEmail", emailQueryList)
                     .get()
                     .await()
 
                 val pendingSnap = firestore.collection("asl_review")
-                    .whereEqualTo("userEmail", email)
+                    .whereIn("userEmail", emailQueryList)
                     .get()
                     .await()
 
@@ -399,7 +490,8 @@ class ContributeFragment : Fragment() {
     ): List<UserContribution> {
         val list = mutableListOf<UserContribution>()
         for (doc in snap.documents) {
-            val word = doc.getString("word") ?: "(unknown)"
+            // Check both "word" and "Label" (screenshot uses Label)
+            val word = doc.getString("word") ?: doc.getString("Label") ?: "(unknown)"
             val ts = doc.getTimestamp("createdAt")
             list += UserContribution(
                 word = word,
@@ -456,6 +548,28 @@ class ContributeFragment : Fragment() {
             }
 
             container.addView(row)
+        }
+    }
+
+    class RecentVideosAdapter(private val onClick: (RecentVideoItem) -> Unit) : RecyclerView.Adapter<RecentVideosAdapter.VideoViewHolder>() {
+        private val items = mutableListOf<RecentVideoItem>()
+        fun submitList(newItems: List<RecentVideoItem>) {
+            items.clear()
+            items.addAll(newItems)
+            notifyDataSetChanged()
+        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VideoViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_recent_video, parent, false))
+        override fun onBindViewHolder(holder: VideoViewHolder, position: Int) = holder.bind(items[position], onClick)
+        override fun getItemCount() = items.size
+        class VideoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            fun bind(item: RecentVideoItem, onClick: (RecentVideoItem) -> Unit) {
+                itemView.findViewById<TextView>(R.id.textName).text = item.name
+                itemView.setOnClickListener { onClick(item) }
+                
+                val videoView = itemView.findViewById<VideoView>(R.id.itemVideoView)
+                videoView.setVideoURI(item.uri)
+                videoView.seekTo(1)
+            }
         }
     }
 }

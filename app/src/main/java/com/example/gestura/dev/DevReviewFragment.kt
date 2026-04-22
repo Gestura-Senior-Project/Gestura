@@ -40,23 +40,15 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
             .get()
             .addOnSuccessListener { snapshot ->
                 val items = snapshot.documents.map { doc ->
+                    @Suppress("UNCHECKED_CAST")
                     ReviewContribution(
                         id = doc.id,
-
-                        // Show what user was supposed to sign
-                        label = doc.getString("typedWord")
-                            ?: doc.getString("word")
-                            ?: "",
-
+                        word = doc.getString("word") ?: doc.getString("typedWord") ?: "",
+                        predictedLabel = doc.getString("predictedLabel") ?: "",
                         videoUrl = doc.getString("videoUrl") ?: "",
-
-                        // uploader
-                        uploaderEmail = doc.getString("userEmail") ?: "",
-
-                        // confidence not stored — compute fallback
-                        confidence = doc.getDouble("confidence")
-                            ?: 0.0,
-
+                        userEmail = doc.getString("userEmail") ?: "",
+                        confidence = doc.getDouble("confidence") ?: 0.0,
+                        keypoints = (doc.get("keypoints") as? List<Double>) ?: emptyList(),
                         createdAt = doc.getTimestamp("createdAt")
                     )
                 }
@@ -64,6 +56,7 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
                 adapter.setItems(items)
             }
     }
+
     private fun attachSwipeActions() {
         val callback = object : ItemTouchHelper.SimpleCallback(
             0,
@@ -93,14 +86,16 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
         val reviewRef = db.collection("asl_review").document(item.id)
         val acceptedRef = db.collection("asl_accepted").document(item.id)
 
+        // Matching Screenshot 2 payload exactly
         val acceptedData = hashMapOf(
-            "label" to item.label,
-            "videoUrl" to item.videoUrl,
-            "uploaderEmail" to item.uploaderEmail,
             "confidence" to item.confidence,
             "createdAt" to item.createdAt,
-            "reviewDecision" to "accepted",
-            "reviewedAt" to Timestamp.now()
+            "id" to item.id,
+            "keypoints" to item.keypoints,
+            "predictedLabel" to item.predictedLabel,
+            "status" to "accepted",
+            "userEmail" to item.userEmail,
+            "word" to item.word
         )
 
         db.runBatch { batch ->
@@ -117,14 +112,16 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
         val reviewRef = db.collection("asl_review").document(item.id)
         val rejectedRef = db.collection("asl_rejected").document(item.id)
 
+        // Maintaining consistency for rejected documents as well
         val rejectedData = hashMapOf(
-            "label" to item.label,
-            "videoUrl" to item.videoUrl,
-            "uploaderEmail" to item.uploaderEmail,
             "confidence" to item.confidence,
             "createdAt" to item.createdAt,
-            "reviewDecision" to "rejected",
-            "reviewedAt" to Timestamp.now()
+            "id" to item.id,
+            "keypoints" to item.keypoints,
+            "predictedLabel" to item.predictedLabel,
+            "status" to "rejected",
+            "userEmail" to item.userEmail,
+            "word" to item.word
         )
 
         db.runBatch { batch ->

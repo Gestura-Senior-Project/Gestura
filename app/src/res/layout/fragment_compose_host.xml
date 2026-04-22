@@ -147,7 +147,6 @@
                 android:layout_height="0dp"
                 android:visibility="gone" />
 
-            <!-- Play/Pause Button -->
             <TextView
                 android:id="@+id/buttonPlayPause"
                 android:layout_width="0dp"
@@ -167,7 +166,6 @@
                 android:layout_width="10dp"
                 android:layout_height="0dp" />
 
-            <!-- Start Live Translation Button -->
             <TextView
                 android:id="@+id/btnStartLive"
                 android:layout_width="0dp"

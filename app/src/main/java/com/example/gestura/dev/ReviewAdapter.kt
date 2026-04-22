@@ -29,8 +29,8 @@ class ReviewAdapter(
     override fun onBindViewHolder(holder: ReviewViewHolder, position: Int) {
         val item = items[position]
 
-        holder.tvLabel.text = item.label
-        holder.tvUploader.text = "Uploaded by: ${item.uploaderEmail}"
+        holder.tvLabel.text = item.word
+        holder.tvUploader.text = "Uploaded by: ${item.userEmail}"
         val confidenceText = if (item.confidence <= 1.0) {
             "${(item.confidence * 100).toInt()}%"
         } else {
