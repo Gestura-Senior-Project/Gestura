@@ -160,7 +160,7 @@ class OnDeviceCaptionFragment : Fragment() {
         buttonUploadSecondary = view.findViewById(R.id.buttonUploadSecondary)
 
         buttonPlayPause = view.findViewById(R.id.buttonPlayPause)
-        buttonSpeak = view.findViewById(R.id.buttonSpeak)
+        buttonSpeak = View.findViewById(R.id.buttonSpeak)
         buttonSave = view.findViewById(R.id.buttonSave)
 
         currentTranslationGroup = view.findViewById(R.id.currentTranslationGroup)
@@ -233,6 +233,7 @@ class OnDeviceCaptionFragment : Fragment() {
         videoView?.visibility = View.GONE
         previewView?.visibility = View.VISIBLE
         liveGlosses.clear()
+        renderLiveTranscript() // Show loading dots immediately
 
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
@@ -245,7 +246,7 @@ class OnDeviceCaptionFragment : Fragment() {
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                 .build()
 
-            imageAnalysis.setAnalyzer(cameraExecutor!!) { imageProxy ->
+            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(requireContext())) { imageProxy ->
                 if (!isLiveMode) {
                     imageProxy.close()
                     return@setAnalyzer
@@ -254,9 +255,13 @@ class OnDeviceCaptionFragment : Fragment() {
                 val bitmap = previewView?.bitmap
                 if (bitmap != null) {
                     liveServerClient.streamFrame(bitmap) { gloss ->
-                        if (!gloss.isNullOrBlank() && (liveGlosses.isEmpty() || liveGlosses.last() != gloss)) {
-                            liveGlosses.add(gloss)
-                            lifecycleScope.launch(Dispatchers.Main) {
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            // Only add to list if it's a real word and NOT "nothing"
+                            if (!gloss.isNullOrBlank() && 
+                                gloss.lowercase() != "nothing" && 
+                                (liveGlosses.isEmpty() || liveGlosses.last() != gloss)) {
+                                
+                                liveGlosses.add(gloss)
                                 renderLiveTranscript()
                             }
                         }
@@ -293,7 +298,9 @@ class OnDeviceCaptionFragment : Fragment() {
 
     private fun renderLiveTranscript() {
         currentTranslationGroup?.visibility = View.VISIBLE
-        textCurrentTranslation?.text = "Streaming: " + liveGlosses.joinToString(" ")
+        // If we haven't detected any real words yet, just show "..."
+        val transcript = if (liveGlosses.isEmpty()) "..." else liveGlosses.joinToString(" ")
+        textCurrentTranslation?.text = "Streaming: $transcript"
     }
 
     private fun togglePlayPause() {

@@ -21,7 +21,8 @@ class LiveAslServerClient {
     private val openAiClient = OkHttpClient()
 
     companion object {
-        private const val SERVER_URL = "http://10.0.2.2:8000/predict_live"
+        // Updated to Port 5001 for Live Prediction
+        private const val SERVER_URL = "http://10.0.2.2:5001/predict_live"
         private const val OPENAI_URL = "https://api.openai.com/v1/chat/completions"
     }
 
