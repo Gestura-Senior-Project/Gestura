@@ -1,233 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp"
+    android:fillViewport="true"
     android:background="?android:attr/windowBackground"
-    tools:context=".auth/LoginFragment">
+    tools:context=".auth.LoginFragment">
 
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/login_root"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <!-- HEADER: logo + title -->
-        <LinearLayout
-            android:id="@+id/headerContainer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="72dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/login_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <ImageView
-                android:id="@+id/logo"
-                android:layout_width="330dp"
-                android:layout_height="176dp"
-                android:background="@drawable/bg_logo_circle"
-                android:padding="16dp"
-                android:src="@drawable/ic_asl_logo"
-                android:scaleType="centerInside" />
-
-            <TextView
-                android:id="@+id/tvAppTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="ASL Translator"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="24sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tvSubtitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Connect through sign language"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="16sp" />
-        </LinearLayout>
-
-        <!-- PILL TOGGLE: Login / Sign Up -->
-        <LinearLayout
-            android:id="@+id/tabsContainer"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_marginHorizontal="24dp"
-            android:layout_marginTop="32dp"
-            android:background="@drawable/bg_tabs"
-            android:padding="4dp"
-            app:layout_constraintTop_toBottomOf="@id/headerContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <TextView
-                android:id="@+id/tabLogin"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="@drawable/bg_tab_selected"
-                android:gravity="center"
-                android:text="Login"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tabSignUp"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="Sign Up"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <!-- CARD: login form -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardAuth"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="24dp"
-            app:cardCornerRadius="24dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardUseCompatPadding="true"
-            app:cardElevation="6dp"
-            app:layout_constraintTop_toBottomOf="@id/tabsContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
+            <!-- HEADER: logo + title -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/headerContainer"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="72dp"
+                android:gravity="center_horizontal"
                 android:orientation="vertical"
-                android:padding="20dp">
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:id="@+id/logo"
+                    android:layout_width="330dp"
+                    android:layout_height="176dp"
+                    android:background="@drawable/bg_logo_circle"
+                    android:padding="16dp"
+                    android:src="@drawable/ic_asl_logo"
+                    android:scaleType="centerInside" />
 
                 <TextView
-                    android:id="@+id/tvTitle"
+                    android:id="@+id/tvAppTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Welcome back"
+                    android:layout_marginTop="16dp"
+                    android:text="ASL Translator"
                     android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="20sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
 
                 <TextView
-                    android:id="@+id/tvSubtitleCard"
+                    android:id="@+id/tvSubtitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Enter your credentials to access your account"
+                    android:text="Connect through sign language"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="16sp" />
+            </LinearLayout>
+
+            <!-- PILL TOGGLE: Login / Sign Up -->
+            <LinearLayout
+                android:id="@+id/tabsContainer"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginHorizontal="24dp"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_tabs"
+                android:padding="4dp"
+                app:layout_constraintTop_toBottomOf="@id/headerContainer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <TextView
+                    android:id="@+id/tabLogin"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_tab_selected"
+                    android:gravity="center"
+                    android:text="Login"
+                    android:textColor="?android:attr/textColorPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tabSignUp"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Sign Up"
                     android:textColor="?android:attr/textColorSecondary"
                     android:textSize="14sp" />
-
-                <!-- Email -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Email"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etEmail"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="you@example.com"
-                    android:inputType="textEmailAddress"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:paddingHorizontal="12dp" />
-
-                <!-- Password -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Password"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <EditText
-                    android:id="@+id/etPassword"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="6dp"
-                    android:background="@drawable/bg_input"
-                    android:hint="••••••••"
-                    android:inputType="textPassword"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:paddingHorizontal="12dp" />
-
-                <!-- Forgot password -->
-                <TextView
-                    android:id="@+id/tvReset"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Forgot password?"
-                    android:textColor="?attr/colorPrimary"
-                    android:textSize="14sp" />
-
-                <!-- Sign in -->
-                <Button
-                    android:id="@+id/btnSignIn"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="16dp"
-                    android:background="@drawable/bg_primary_button"
-                    android:text="Sign In"
-                    android:textAllCaps="false"
-                    android:textColor="?attr/colorOnPrimary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <!-- Sign up (Create account) -->
-                <Button
-                    android:id="@+id/btnSignUp"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@android:color/transparent"
-                    android:text="Create Account"
-                    android:textAllCaps="false"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="16sp" />
-
-                <!-- Error text -->
-                <TextView
-                    android:id="@+id/tvError"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:textColor="@android:color/holo_red_dark" />
-
-                <!-- Progress -->
-                <ProgressBar
-                    android:id="@+id/progress"
-                    style="?android:attr/progressBarStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_marginTop="12dp"
-                    android:visibility="gone" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</LinearLayout>
+            <!-- CARD: login form -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardAuth"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="24dp"
+                app:cardCornerRadius="24dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardUseCompatPadding="true"
+                app:cardElevation="6dp"
+                app:layout_constraintTop_toBottomOf="@id/tabsContainer"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Welcome back"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="20sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvSubtitleCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Enter your credentials to access your account"
+                        android:textColor="?android:attr/textColorSecondary"
+                        android:textSize="14sp" />
+
+                    <!-- Email -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="Email"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/etEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_input"
+                        android:hint="you@example.com"
+                        android:inputType="textEmailAddress"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textColorHint="?android:attr/textColorSecondary"
+                        android:paddingHorizontal="12dp" />
+
+                    <!-- Password -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Password"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <EditText
+                        android:id="@+id/etPassword"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_input"
+                        android:hint="••••••••"
+                        android:inputType="textPassword"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textColorHint="?android:attr/textColorSecondary"
+                        android:paddingHorizontal="12dp" />
+
+                    <!-- Forgot password -->
+                    <TextView
+                        android:id="@+id/tvReset"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Forgot password?"
+                        android:textColor="?attr/colorPrimary"
+                        android:textSize="14sp" />
+
+                    <!-- Sign in -->
+                    <Button
+                        android:id="@+id/btnSignIn"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:background="@drawable/bg_primary_button"
+                        android:text="Sign In"
+                        android:textAllCaps="false"
+                        android:textColor="?attr/colorOnPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <!-- Sign up (Create account) -->
+                    <Button
+                        android:id="@+id/btnSignUp"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="8dp"
+                        android:background="@android:color/transparent"
+                        android:text="Create Account"
+                        android:textAllCaps="false"
+                        android:textColor="?android:attr/textColorPrimary"
+                        android:textSize="16sp" />
+
+                    <!-- Error text -->
+                    <TextView
+                        android:id="@+id/tvError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@android:color/holo_red_dark" />
+
+                    <!-- Progress -->
+                    <ProgressBar
+                        android:id="@+id/progress"
+                        style="?android:attr/progressBarStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginTop="12dp"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+</ScrollView>
