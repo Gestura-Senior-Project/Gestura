@@ -1,0 +1,64 @@
+🤟 Gestura User Manual
+=====================
+
+Bridging the gap between Deaf and hearing communities through AI.
+
+1. Getting Started
+------------------
+
+🔐 Authentication
+* Sign Up: Open the app and tap Sign Up. Enter your email and a secure password to create your profile.
+* Login: If you already have an account, enter your credentials on the home screen.
+* Reset Password: Forgot your password? Tap Reset Password on the login screen to receive a recovery email via Firebase.
+
+2. Core Features
+----------------
+
+🎥 ASL Translation (Live Mode)
+* Access: Tap the ASL icon in the bottom navigation bar.
+* Start Live: Tap the Start Live Translation button to open your camera.
+* Signing: Position yourself so your upper body is visible. Gestura will detect your landmarks in real-time.
+* Read & Speak: Translated text will appear in the overlay. Tap the Speak button to hear the translation read aloud.
+* History: Swipe up on the translation card to save the sentence to your local history.
+
+📁 ASL Translation (Video Upload)
+* Select Video: On the ASL tab, scroll through the Recent Videos carousel or tap the upload icon to pick a video from your gallery.
+* Analyze: The app will process the video landmarks and display the predicted sign and confidence score.
+
+👤 ASL Avatar (Text-to-Sign)
+* Access: Tap the Avatar icon in the bottom navigation.
+* Input: Type any word or sentence into the input field.
+* Generate: Tap Submit. Our AI will generate a realistic 3D avatar animation of the ASL signs.
+* Playback: Use the player controls to loop the animation or adjust the playback speed.
+
+3. Community & Contributions
+----------------------------
+
+📈 Contribute Tab
+* Help us learn: Tap Contribute to help improve our AI model.
+* Record/Pick: Select a gesture you'd like to contribute (e.g., "Hello" or "Thank you").
+* Submit: Record a short clip of yourself performing the sign and tap Submit.
+* Track Stats: View your contribution milestones (Total, Approved, and Pending) at the top of the screen.
+
+🛠️ Developer Review (Restricted)
+* Note: This feature is only available for authorized reviewers.
+* Review Queue: View a list of user-contributed gestures.
+* Audit: Watch the video and compare it to the predicted label.
+* Action: Swipe Right to accept the contribution into the training dataset, or swipe Left to reject it.
+
+4. Settings & Customization
+---------------------------
+
+⚙️ App Settings
+* Theme: Toggle between Light Mode and Dark Mode for a comfortable viewing experience.
+* Model Updates: Tap Check for Updates to download the latest, most accurate AI weights from our servers.
+* Account: Update your display name or log out securely from the Settings menu.
+
+5. Troubleshooting
+------------------
+* Camera Not Working: Ensure you have granted "Camera Permission" in your Android system settings.
+* Low Accuracy: Ensure you are in a well-lit environment and your hands are clearly visible to the camera.
+* Sync Issues: Check your internet connection if your contribution stats or avatar animations are not loading.
+
+Version: 1.0.0
+Support: Mottravenbusiness@gmail.com

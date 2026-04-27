@@ -160,7 +160,7 @@ class OnDeviceCaptionFragment : Fragment() {
         buttonUploadSecondary = view.findViewById(R.id.buttonUploadSecondary)
 
         buttonPlayPause = view.findViewById(R.id.buttonPlayPause)
-        buttonSpeak = View.findViewById(R.id.buttonSpeak)
+        buttonSpeak = view.findViewById(R.id.buttonSpeak)
         buttonSave = view.findViewById(R.id.buttonSave)
 
         currentTranslationGroup = view.findViewById(R.id.currentTranslationGroup)
