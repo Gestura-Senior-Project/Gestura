@@ -1,63 +1,148 @@
-Gestura (Unit 7)
+# Gestura: An AI-Powered Mobile Application for Inclusive Sign Language Communication
+
+**Author:** Raven Mott  
+**Department:** Computer Science, Virginia State University  
+**Email:** Rmot1202@students.vsu.edu  
+**Supervisor:** [Supervisor Name]  
+**Date:** May 2024
+
+---
 
 ## Table of Contents
 
-1. [Overview](#Overview)
-2. [Technical Architecture](#Technical-Architecture)
-   - [Database Schema](#Database-Schema)
-   - [Core Fragments](#Core-Fragments)
-3. [Product Spec](#Product-Spec)
-4. [User Manual](#User-Manual)
-5. [Wireframes](#Wireframes)
+1. [Overview](#overview)
+   - [Abstract](#abstract)
+   - [Motivation](#motivation)
+2. [Introduction & Related Work](#introduction--related-work)
+3. [Problem Definition](#problem-definition)
+   - [Goals & Deliverables](#goals--deliverables)
+   - [Specifications & Constraints](#specifications--constraints)
+4. [Technical Architecture](#technical-architecture)
+   - [System Components](#system-components)
+   - [Methodology](#methodology)
+   - [Database Schema](#database-schema)
+5. [Concepts Considered & Selection](#concepts-considered--selection)
+6. [Design & Implementation](#design--implementation)
+   - [Core Fragments](#core-fragments)
+   - [Code Snippets](#code-snippets)
+7. [Impact & Considerations](#impact--considerations)
+8. [User Manual](#user-manual)
+9. [Milestones & Progress](#milestones--progress)
 
 ---
 
 ## Overview
 
-### Description
+### Abstract
+American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers. Gestura is an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. The system integrates real-time ASL recognition, natural-language sentence generation, and animated text-to-ASL avatar output. By combining on-device temporal gesture models with cloud-backed data pipelines, Gestura addresses latency and privacy concerns while maintaining a scalable platform for community-driven dataset growth.
 
-**Gestura** is an AI-powered mobile app. It translates American Sign Language (ASL) gestures into text and speech — and vice versa — in real time. The app also allows users to learn ASL, contribute gesture data to train models, and stay updated as it with the latest AI model.  
-Gestura bridges the communication gap between Deaf and hearing communities through accessibility-focused innovation.
+### Description
+**Gestura** translates ASL gestures into text and speech — and vice versa — in real time. It provides a unified architecture that integrates temporal gesture recognition, natural-language generation, and animated avatar output.
+
+### Motivation
+The project is inspired by first-hand experiences with communication barriers. Growing up with an aunt who is hard of hearing, I witnessed the challenges my family faced in finding intuitive, modern ASL tools. Gestura aims to bridge this gap through a mobile-first, privacy-preserving platform.
+
+---
+
+## Introduction & Related Work
+
+American Sign Language (ASL) is used by millions, yet communication gaps often require human interpreters or slow text exchanges. Gestura addresses these gaps by using on-device processing and NLP.
+
+### Related Work
+- **Bantupalli and Xie (2018):** Explores ASL recognition using deep learning, highlighting how temporal models (RNNs/LSTMs) improve accuracy over static classifiers by capturing motion dynamics.
+- **Karthikeyan (2018):** Discusses mobile machine learning strategies, emphasizing on-device inference to achieve real-time performance while preserving privacy.
+- **Roh et al. (2021):** Analyzes data collection for ML, advocating for diverse and validated datasets, which supports Gestura's community contribution model.
+- **Miljkovic et al. (2024):** Validates the use of Firebase as a scalable backend for multi-user Android applications.
+
+---
+
+## Problem Definition
+
+Despite progress in AI, there is no comprehensive mobile platform that recognizes dynamic, continuous ASL, produces fluent sentences, and supports community-driven data expansion.
+
+### Goals & Deliverables
+- **Functional Prototype:** Android app with real-time recognition.
+- **ML Models:** Trained TFLite models for gesture classification.
+- **Data Pipeline:** Firebase integration for contributions and updates.
+- **Avatar System:** Reverse translation (Text-to-Sign) visualization.
+
+### Specifications & Constraints
+- **Enabled Capabilities:** On-device TFLite inference, cloud-synced model updates, and multilingual support.
+- **Constraints:** Mobile hardware limits model complexity; recognition accuracy is sensitive to lighting and background variability; initial vocabulary is limited to a core subset of ASL.
 
 ---
 
 ## Technical Architecture
 
-### Database Schema
+### System Components
 
-Gestura uses **Firebase Firestore** as its primary NoSQL database. The schema is organized into three main collections to manage the "Contribute → Review → Accept" pipeline:
+#### Device-Side (Edge)
+- **CameraX Capture:** Real-time frame streaming.
+- **MediaPipe Feature Extraction:** Extracts landmarks (hands/body) to reduce data dimensionality.
+- **Temporal Classifier:** TensorFlow Lite models (LSTM/GRU) mapping sequences to ASL gloss tokens.
+- **TTS:** Android's TextToSpeech API for vocalization.
 
-#### 1. `asl_review` (Pending Contributions)
-Stores gestures uploaded by users that are waiting for developer audit.
-- `word`: String (The intended sign)
-- `predictedLabel`: String (The label predicted by the on-device model)
-- `confidence`: Double (Confidence score 0-100)
-- `videoUrl`: String (Firebase Storage link to the MP4 file)
-- `userEmail`: String (Contributor identity)
-- `keypoints`: List<Double> (Flattened MediaPipe landmark data)
-- `createdAt`: Timestamp
-- `isMismatch`: Boolean (True if typed word != predicted label)
+#### Cloud-Side (Firebase)
+- **Authentication:** Role-gated access (User, Reviewer, Developer).
+- **Firestore:** Real-time metadata for contributions and model manifests.
+- **Storage:** Media samples and model distribution.
 
-#### 2. `asl_accepted` (Verified Data)
-Verified contributions moved from `asl_review`. These are used for periodic model retraining.
-- (Inherits fields from `asl_review`)
-- `status`: "accepted"
+### Methodology
+Gestura follows a hybrid edge-cloud design. Inference happens on-device to minimize latency and protect privacy. The cloud is used for heavy-lifting tasks like dataset curation, reviewer auditing, and delivering model updates.
 
-#### 3. `asl_reference` (Learning Material)
-Reference videos shown to users in the Contribute tab.
+### Database Schema (Firestore)
+
+#### 1. `users/{uid}`
+- `email`: String
+- `role`: String (user, reviewer, developer)
+- `stats`: Map (total_contributions, accepted_count, accuracy)
+
+#### 2. `asl_review` (Triage Pipeline)
+- `word`: String (intended sign)
+- `predictedLabel`: String (model output)
+- `confidence`: Double (0-100)
+- `videoUrl`: String (Firebase Storage link)
+- `keypoints`: List<Double> (MediaPipe landmarks)
+- `status`: String (pending, approved, rejected)
+- `isMismatch`: Boolean (typed word != predicted)
+
+#### 3. `asl_accepted` (Verified Dataset)
+- Contains verified samples moved from `asl_review` after developer approval.
+
+#### 4. `asl_reference`
 - `displayWord`: String
-- `storagePath`: String (Path to reference video in Cloud Storage)
+- `storagePath`: String (Path to reference video)
 
 ---
 
-### Core Fragments & Logic
+## Concepts Considered & Selection
 
-#### 1. ASL Translation (`OnDeviceCaptionFragment.kt`)
-Handles live camera processing and video classification.
-- **Inference:** Uses `AslSamplePipeline` to extract landmarks via a remote Holistic server and classifies them locally using a TFLite LSTM model.
-- **Key Logic:**
+### 1. Integrated Development Environment (IDE)
+- **Options:** Android Studio vs. Visual Studio Code.
+- **Selection:** **Android Studio**. While VS Code is lighter, Android Studio provides the official emulator, native Kotlin support, and direct TFLite integration required for this project.
+
+### 2. Backend Infrastructure
+- **Options:** Firebase vs. Custom FastAPI/Node.js Server.
+- **Selection:** **Firebase**. BaaS (Backend-as-a-Service) allowed for rapid development of Auth and Storage without the overhead of maintaining custom server infrastructure.
+
+### 3. Feature Extraction
+- **Options:** Raw RGB Video vs. MediaPipe Landmarks.
+- **Selection:** **MediaPipe Landmarks**. Extracting keypoints on-device significantly reduces the input size for the LSTM model and improves privacy by not transmitting raw video for processing.
+
+---
+
+## Design & Implementation
+
+### Core Fragments
+- **`OnDeviceCaptionFragment`:** The core ASL translation screen. Orchestrates CameraX, MediaPipe, and TFLite inference.
+- **`ContributeFragment`:** A guided UI for users to submit samples, including validation against the current model.
+- **`AvatarFragment`:** Interfaces with `AvatarService` to render 3D sign animations.
+- **`DevReviewFragment`:** A role-gated interface for developers to approve/reject contributions via swipe gestures.
+
+### Code Snippets
+
+**On-Device Classification Trigger:**
 ```kotlin
-// Example of triggering on-device classification from a video URI
 private fun classifyVideo(uri: Uri) {
     lifecycleScope.launch(Dispatchers.IO) {
         val pipeline = AslSamplePipeline(requireContext())
@@ -70,14 +155,7 @@ private fun classifyVideo(uri: Uri) {
 }
 ```
 
-#### 2. Contributions (`ContributeFragment.kt`)
-Allows users to record and upload signs.
-- **Validation:** Compares user-typed labels against model predictions before submission.
-- **Data Pipeline:** Uploads raw video to Firebase Storage and metadata to Firestore.
-
-#### 3. Avatar Rendering (`AvatarService.kt`)
-Communicates with the GenASL API to generate 3D sign animations from text.
-- **Modern Networking:** Uses OkHttp extension functions for clean MediaType handling.
+**Modern Networking (OkHttp Extension):**
 ```kotlin
 fun generateAvatar(text: String, callback: AvatarCallback) {
     val request = Request.Builder()
@@ -91,69 +169,37 @@ fun generateAvatar(text: String, callback: AvatarCallback) {
 
 ---
 
-## Product Spec
+## Impact & Considerations
 
-### 1. User Features (Required and Optional)
+### Impact Analysis
+- **Local/Individual:** Improved independence and accessibility for Deaf individuals in daily social interactions.
+- **Organizational:** Enhanced inclusivity in healthcare and educational environments.
+- **Global:** Potential for cross-cultural communication by expanding to support multiple sign languages.
 
-**Required Features**
-1. Camera-based ASL gesture recognition → displays translated text  
-2. Text-to-speech conversion for recognized signs  
-4. User authentication (Firebase login/sign-up)  
-5. Model update button to sync with the latest AI model  
-5. Animated ASL avatar for reverse translation (speech/text → sign)  
-6. Gesture training feature allowing users to upload new ASL images to the cloud  
-7. Multilingual translation support (Spanish, Japanese, etc.)  
-8. Offline mode with cached AI models  
-9. Dark Mode
-10. See number of valid contributions and accuracy
+### Ethical & Legal
+- **Data Privacy:** Prioritizing on-device processing.
+- **Bias Mitigation:** Actively diversifying user-contributed datasets.
+- **Security:** Secure model distribution via cryptographic manifest signing.
 
 ---
 
 ## User Manual
 
-Detailed instructions on how to use the app can be found in the [User Manual (TXT)](UserManual.txt).
-
-### Core Features at a Glance:
-*   **ASL Translation:** Live camera detection or video upload.
-*   **ASL Avatar:** Convert text into sign language animations.
-*   **Contribute:** Help train the AI by uploading your own gestures.
-*   **Settings:** Customize themes and sync model updates.
+Detailed instructions can be found in the [User Manual (TXT)](UserManual.txt) or the formal [Project Documentation (MD)](ProjectDocumentation.md).
 
 ---
 
-## Wireframes
-![Justora Wireframes](docs/justora-wireframe.svg)
+## Milestones & Progress
 
-<br>
+### Milestone 2 - Build Sprint 1
+- ✅ **Bottom Navigation:** Material Component integration.
+- ✅ **Firebase Auth:** Email/password login & mode-swapping UI.
+- ✅ **Translate Tab:** Compose-based multilingual text translation.
 
-# Milestone 2 - Build Sprint 1 (Unit 8)
-
-## GitHub Project board
-![Milestone Board](allmile.png)
-
-## Issues worked on this sprint
-**Completed (3/3):**
-- ✅ **Bottom Navigation** — Implemented Material BottomNavigationView wired to Navigation Component.
-- ✅ **Login** — Email/password auth with Firebase.
-- ✅ **Language translation tab** — Compose-based screen embedded in Fragment.
-
-<br>
-
-# Milestone 3 - Build Sprint 2 (Unit 9)
-
-## Completed user stories
-- ✅ **ASL Tab** — Camera preview, capture pipeline, Holistic → LSTM inference  
-- ✅ **Contribute Tab** — Upload gesture samples, store metadata, validation  
-- ✅ **Data Backend** — Firestore + Storage + Functions for contributions & model training  
-- ✅ **UI Polish (V1)** — Cleaner typography, spacing, accessibility labels
-
-## Build progress (GIFs) 
-
-**ASL Translation Flow (Camera → Landmarks → Text)**
-![ASL Translation](3.gif)
-
-**Contribution Flow (Upload → Validate → Submit)**
-![Contribute](4.gif)
+### Milestone 3 - Build Sprint 2
+- ✅ **ASL Tab:** Live CameraX + MediaPipe + TFLite inference.
+- ✅ **Contribute Tab:** Guided capture and Firestore/Storage pipeline.
+- ✅ **UI Polish:** Consistent Material3 theming and dark mode support.
 
 ## App Demo Video
 ▶️ [Watch the full demo](https://www.canva.com/design/DAG5rJy2Dl8/kSQlA8HvxSn-BRn41vgXGg/watch?utm_content=DAG5rJy2Dl8&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd5119630c7)

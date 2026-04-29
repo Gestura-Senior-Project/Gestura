@@ -1,0 +1,133 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{cite}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\onehalfspacing
+
+\begin{document}
+
+% 1. Title Page
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\huge \bfseries Gestura: An AI-Powered Mobile Application for Inclusive Sign Language Communication \par}
+    \vspace{2cm}
+    {\Large Raven Mott \par}
+    \vspace{1cm}
+    {\large Department of Computer Science \\ Virginia State University \par}
+    \vspace{2cm}
+    {\large \textbf{Project Supervisor:} [Supervisor Name] \par}
+    \vspace{2cm}
+    {\large May 2024 \par}
+    \vfill
+\end{titlepage}
+
+% 2. Abstract
+\section*{Abstract}
+American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers in educational, medical, and everyday environments. Motivated by first-hand experiences with communication accessibility challenges within my own family, this project introduces \emph{Gestura}, an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. Existing ASL technologies tend to be fragmented—limited to isolated gestures, reliant on bulky hardware, or dependent on cloud servers that introduce latency and privacy concerns. Gestura addresses these gaps through a unified architecture that integrates real-time ASL recognition, natural-language sentence generation, multilingual translation, and animated text-to-ASL avatar output.
+
+The system combines on-device temporal gesture models with cloud-backed data pipelines for validation, contributor management, and secure model updates. ASL inputs are translated into gloss sequences and then transformed into fluent sentences using large language models, enabling more natural communication than character- or word-level output. A guided capture workflow enables community-driven dataset growth, while a role-gated reviewer mode supports dataset curation and continuous retraining. This paper presents the system architecture, modeling methodology, Firebase data design, and phased implementation plan, and defines evaluation metrics across accuracy, latency, and usability.
+
+\newpage
+
+% 3. Table of Contents
+\tableofcontents
+\newpage
+
+% 4. Introduction & Related Work
+\section{Introduction \& Related Work}
+American Sign Language (ASL) is a rich, fully expressive visual language used by millions of Deaf and hard-of-hearing individuals. However, communication between ASL users and non-signers often depends on human interpreters, written notes, or slow text-based exchanges. My personal motivation for this project comes from growing up in a family where my aunt, who is hard of hearing, relied heavily on ASL. Watching my mother and relatives learn to sign—and witnessing the challenges they faced finding modern, accessible ASL tools—inspired the creation of a more intuitive, mobile-first translation system.
+
+\subsection{Related Work}
+Existing research has explored various facets of ASL recognition. Bantupalli and Xie \cite{bantupalli2018asl} demonstrate how temporal models like RNNs/LSTMs improve accuracy over static classifiers by capturing the dynamic motion of signing. Karthikeyan \cite{karthikeyan2018mlmobile} emphasizes the necessity of on-device inference for real-time mobile applications, addressing constraints like power and latency. Roh et al. \cite{roh2021data} focus on the importance of robust and diverse data collection pipelines, which informed Gestura's community-driven contribution model.
+
+% 5. Problem Definition
+\section{Problem Definition}
+Despite progress in ASL research, there is no comprehensive, mobile-first platform that recognizes dynamic ASL gestures, produces fluent sentences, and incorporates scalable community-driven dataset expansion.
+
+\subsection{Specific Goals and Deliverables}
+\begin{itemize}
+    \item Develop an Android application for real-time ASL recognition.
+    \item Implement temporal gesture recognition models (TFLite).
+    \item Integrate gloss-to-sentence generation using NLP models.
+    \item Implement a guided contribution workflow for dataset growth.
+    \item Deliver a functional prototype with a Firebase-backed pipeline.
+\end{itemize}
+
+\subsection{Specifications and Constraints}
+\textbf{Capabilities:} On-device TFLite inference, cloud-based dataset management, and text-to-ASL avatar functionality. \\
+\textbf{Constraints:} Mobile hardware limits the complexity of temporal models. Recognition is sensitive to environmental factors like lighting and background. The initial vocabulary is restricted to high-frequency ASL gestures.
+
+\subsection{Impact Analysis}
+\textbf{Local Impact:} Empowers individuals with independence in social and essential (medical/legal) interactions. \\
+\textbf{Organizational Impact:} Enhances inclusivity in workplaces and public institutions. \\
+\textbf{Societal Impact:} Promotes the adoption of inclusive AI technologies and raises accessibility awareness globally.
+
+\subsection{Ethical, Legal, and Security Considerations}
+\textbf{Ethics:} Actively mitigating bias in datasets by diversifying contributors. \\
+\textbf{Legal:} Compliance with data privacy (GDPR/CCPA) by prioritizing on-device processing. \\
+\textbf{Security:} Secure model distribution via cryptographic manifest signing and role-gated access control in Firebase.
+
+% 6. Methodology
+\section{Methodology}
+Gestura uses a hybrid edge-cloud architecture. The mobile client handles CameraX capture and feature extraction (landmarks). These features are passed to a temporal classifier (LSTM) deployed via TensorFlow Lite. Gloss sequences are then transformed into natural sentences via an LLM API. The cloud (Firebase) manages authentication, metadata (Firestore), and media storage.
+
+% 7. Concepts Considered
+\section{Concepts Considered}
+Several options were evaluated during implementation:
+\begin{itemize}
+    \item \textbf{IDE:} Android Studio vs. Visual Studio Code.
+    \item \textbf{Backend:} Firebase vs. Custom FastAPI Server.
+    \item \textbf{Processing:} MediaPipe Landmarks vs. Raw RGB Video Processing.
+    \item \textbf{Inference:} On-device TFLite vs. Server-side prediction.
+\end{itemize}
+
+% 8. Concept Selection
+\section{Concept Selection}
+\begin{itemize}
+    \item \textbf{Android Studio} was selected for its native Android tools and TFLite integration.
+    \item \textbf{Firebase} was chosen for its rapid scalability and robust out-of-the-box authentication.
+    \item \textbf{MediaPipe Landmarks} were selected to reduce data dimensionality and improve privacy.
+    \item \textbf{On-device Inference} was chosen to ensure low latency and offline capability.
+\end{itemize}
+
+% 9. Design and Implementation
+\section{Design and Implementation}
+The application is structured into modular Fragments (ASL, Contribute, Avatar, Settings).
+The \texttt{OnDeviceCaptionFragment} manages the CameraX life-cycle and asynchronous inference. The \texttt{ContributeFragment} uses a guided UI to collect validated data from users.
+
+% 10. Conclusion/Summary
+\section{Conclusion/Summary}
+Gestura successfully provides a scalable, mobile-first solution for ASL translation. By utilizing on-device inference and community-driven data pipelines, it bridges the gap between Deaf and hearing communities while maintaining user privacy and system efficiency.
+
+% 11. Bibliography
+\begin{thebibliography}{99}
+    \bibitem{bantupalli2018asl} Bantupalli, K., \& Xie, Y. (2018). American Sign Language Recognition Using Deep Learning and Computer Vision. IEEE Big Data.
+    \bibitem{roh2021data} Roh, Y., et al. (2021). A Survey on Data Collection for Machine Learning. IEEE Trans. Knowl. Data Eng.
+    \bibitem{karthikeyan2018mlmobile} Karthikeyan, N. G. (2018). Machine Learning Projects for Mobile Applications. Packt Publishing.
+\end{thebibliography}
+
+% 12. Appendices
+\newpage
+\appendix
+\section{User Manual}
+The user manual provides step-by-step instructions for authentication, live translation, and the contribution process. (Refer to \texttt{UserManual.txt} in the project root).
+
+\section{System Architecture}
+(Insert Architecture Diagram here)
+
+\section{Source Code Listing}
+Key components include:
+\begin{itemize}
+    \item \texttt{OnDeviceCaptionFragment.kt}: Core translation logic.
+    \item \texttt{AslSamplePipeline.kt}: Data extraction and classification interface.
+    \item \texttt{AvatarService.kt}: Networking logic for avatar generation.
+\end{itemize}
+
+\end{document}
