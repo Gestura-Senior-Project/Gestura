@@ -6,7 +6,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
-    // id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin") version "2.0.1"
 }
 
 // Optional: exclude the litert group everywhere
@@ -23,7 +22,7 @@ fun lp(name: String) = localProps.getProperty(name) ?: ""
 
 android {
     namespace = "com.example.gestura"
-    compileSdk = 36 // Use a released SDK. Bump to 36 when it’s officially available in your SDK Manager.
+    compileSdk = 36 
 
     defaultConfig {
         applicationId = "com.example.gestura"
@@ -49,9 +48,6 @@ android {
                 "proguard-rules.pro"
             )
         }
-        debug {
-            // nothing special
-        }
     }
 
     buildFeatures {
@@ -60,7 +56,6 @@ android {
         viewBinding = true
     }
 
-    // Use Java 17 with AGP 8+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -68,14 +63,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
-
-    // Let the version come from libs.versions.toml if you track it there.
-    // If you pin it, be sure it matches your Kotlin plugin version.
-    // composeOptions { kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get() }
 }
 
 dependencies {
-    // --- Kotlin + AndroidX core (from your version catalog) ---
+    // --- Kotlin + AndroidX core ---
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -84,37 +75,28 @@ dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.constraintlayout)
 
-    // --- Compose (use BOM; no per-artifact versions) ---
+    // --- Compose ---
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.activity.compose)   // Activity-Compose bridge
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.glance.appwidget)
     implementation("androidx.compose.material:material-icons-extended")
 
     // --- Navigation ---
-    implementation("androidx.navigation:navigation-fragment-ktx:2.8.3")
-    implementation("androidx.navigation:navigation-ui-ktx:2.8.3")
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     implementation("androidx.navigation:navigation-compose:2.8.3")
 
     // --- Firebase ---
-
-    // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.appcheck.playintegrity)
-    implementation(libs.firebase.appcheck.debug)
-
-
-    // Add the dependencies for the Firebase products you want to use
-    // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation(libs.firebase.analytics)
     implementation(libs.google.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.functions)
     implementation(libs.firebase.storage)
-
-
-        // ... add other Firebase dep
+    implementation(libs.firebase.appcheck.playintegrity)
+    implementation(libs.firebase.appcheck.debug)
 
     // --- Networking + JSON ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -124,37 +106,29 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("org.json:json:20240303")
 
-    // --- LARA SDK ---
-    implementation("com.translated.lara:lara-sdk:1.4.3")
+    // --- Media3 (ExoPlayer) ---
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.common)
 
-    // --- Material (View system) if you still use XML/views alongside Compose ---
+    // --- Material ---
     implementation(libs.material)
 
-    // --- Other (keep only if actually used) ---
-    implementation(libs.genai.common)
-    implementation(libs.androidx.room.external.antlr)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.navigation.fragment.ktx)
-    implementation(libs.navigation.ui.ktx)
-
-    // --- Tests ---
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit.ext)
-    androidTestImplementation(libs.androidx.espresso.core)
-
+    // --- ML / MediaPipe ---
     implementation("org.tensorflow:tensorflow-lite:2.10.0")
-    implementation("com.google.mediapipe:tasks-vision:0.10.26")
-
-
     implementation("com.google.mediapipe:tasks-vision:0.10.14")
 
+    // --- Others ---
+    implementation(libs.lara.sdk)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-
-    // --- CameraX dependencies ---
     val camerax_version = "1.3.4"
     implementation("androidx.camera:camera-core:${camerax_version}")
     implementation("androidx.camera:camera-camera2:${camerax_version}")
     implementation("androidx.camera:camera-lifecycle:${camerax_version}")
     implementation("androidx.camera:camera-view:${camerax_version}")
+    implementation("androidx.camera:camera-video:${camerax_version}")
+    
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit.ext)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -3,14 +3,17 @@ package com.example.gestura.ui
 import android.Manifest
 import android.content.ContentUris
 import android.content.pm.PackageManager
+import android.media.ThumbnailUtils
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.speech.tts.TextToSpeech
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -380,14 +383,19 @@ class OnDeviceCaptionFragment : Fragment() {
         historyGroup?.visibility = View.VISIBLE
         val inflater = LayoutInflater.from(requireContext())
         history.take(5).forEach { item ->
-            val tv = inflater.inflate(android.R.layout.simple_list_item_1, container, false) as TextView
-            tv.text = if (item.videoUri != null) "🎬 " + item.text else "🎤 " + item.text
-            tv.setOnClickListener {
+            val itemView = inflater.inflate(R.layout.item_history, container, false)
+            val iconTv = itemView.findViewById<TextView>(R.id.textHistoryIcon)
+            val contentTv = itemView.findViewById<TextView>(R.id.textHistoryContent)
+            
+            iconTv.text = if (item.videoUri != null) "🎬" else "🎤"
+            contentTv.text = item.text
+            
+            itemView.setOnClickListener {
                 if (item.videoUri != null) {
                     onVideoSelected(item.videoUri)
                 }
             }
-            container.addView(tv)
+            container.addView(itemView)
         }
     }
 
@@ -487,9 +495,23 @@ class OnDeviceCaptionFragment : Fragment() {
                 itemView.findViewById<TextView>(R.id.textName).text = item.name
                 itemView.setOnClickListener { onClick(item) }
                 
-                val videoView = itemView.findViewById<VideoView>(R.id.itemVideoView)
-                videoView.setVideoURI(item.uri)
-                videoView.seekTo(1)
+                val thumbnailView = itemView.findViewById<ImageView>(R.id.itemThumbnail)
+                try {
+                    val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        itemView.context.contentResolver.loadThumbnail(item.uri, Size(160, 100), null)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        ThumbnailUtils.createVideoThumbnail(item.uri.path ?: "", MediaStore.Video.Thumbnails.MINI_KIND)
+                    }
+                    thumbnailView.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    thumbnailView.setImageResource(R.drawable.ic_camera_alt_24)
+                }
+
+                val durationSec = item.durationMs / 1000
+                val min = durationSec / 60
+                val sec = durationSec % 60
+                itemView.findViewById<TextView>(R.id.textDuration).text = String.format(Locale.US, "%d:%02d", min, sec)
             }
         }
     }

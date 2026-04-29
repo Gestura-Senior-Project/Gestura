@@ -1,8 +1,10 @@
 package com.example.gestura
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -12,11 +14,17 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -34,8 +42,12 @@ import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 data class RecentVideoItem(
     val uri: Uri,
@@ -47,7 +59,6 @@ class ContributeFragment : Fragment() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val functions by lazy {
-        // same region as in index.ts
         FirebaseFunctions.getInstance("us-central1")
     }
 
@@ -56,13 +67,19 @@ class ContributeFragment : Fragment() {
 
     // --- UI refs ---
     private var editWord: EditText? = null
-    private var buttonPickVideo: Button? = null
-    private var buttonSubmit: Button? = null
-    private var buttonShowReference: Button? = null
+    private var buttonPickVideo: ImageButton? = null
+    private var buttonSubmit: TextView? = null
+    private var buttonShowReference: TextView? = null
     private var videoView: VideoView? = null
     private var referenceVideoView: VideoView? = null
     private var statusText: TextView? = null
     private var progress: ProgressBar? = null
+
+    // Camera UI
+    private var viewFinder: PreviewView? = null
+    private var buttonRecord: ImageButton? = null
+    private var buttonStartCamera: ImageButton? = null
+    private var emptyStateLayout: View? = null
 
     // stats header
     private var txtTotalCount: TextView? = null
@@ -72,63 +89,67 @@ class ContributeFragment : Fragment() {
     // contributions list
     private var contributionsContainer: LinearLayout? = null
 
-    // Recent videos (same as ASL tab)
+    // Recent videos
     private var recyclerRecentVideos: RecyclerView? = null
     private lateinit var recentVideosAdapter: RecentVideosAdapter
     private val snapHelper = LinearSnapHelper()
 
     private var selectedVideoUri: Uri? = null
 
+    // CameraX
+    private var videoCapture: VideoCapture<Recorder>? = null
+    private var recording: Recording? = null
+    private lateinit var cameraExecutor: ExecutorService
+
     private companion object {
         const val MAX_RECENT_VIDEOS = 20
+        const val TAG = "ContributeFragment"
+        val REQUIRED_PERMISSIONS = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
     }
 
     private val pickVideoLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri = result.data?.data
                 if (uri != null) {
                     try {
-                        requireContext().contentResolver
-                            .takePersistableUriPermission(
-                                uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
+                        requireContext().contentResolver.takePersistableUriPermission(
+                            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
                     } catch (e: SecurityException) {
-                        Log.e("ContributeFragment", "Failed to take persistable URI permission", e)
+                        Log.e(TAG, "Failed to take persistable URI permission", e)
                     }
                     onVideoSelected(uri)
                 }
             }
         }
 
-    private val requestVideoPermissionLauncher =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
-                loadRecentVideos()
+    private val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val cameraGranted = permissions[Manifest.permission.CAMERA] ?: false
+            val audioGranted = permissions[Manifest.permission.RECORD_AUDIO] ?: false
+            if (cameraGranted && audioGranted) {
+                startCamera()
             } else {
-                Toast.makeText(requireContext(), "Permission denied. Cannot load recent videos.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Camera and Audio permissions required", Toast.LENGTH_SHORT).show()
             }
         }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return inflater.inflate(
-            R.layout.fragment_contribute,
-            container,
-            false
-        )
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    override fun onViewCreated(
-        view: View,
-        savedInstanceState: Bundle?
-    ) {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
+        return inflater.inflate(R.layout.fragment_contribute, container, false)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // base UI
@@ -140,6 +161,12 @@ class ContributeFragment : Fragment() {
         referenceVideoView = view.findViewById(R.id.referenceVideoView)
         statusText = view.findViewById(R.id.statusText)
         progress = view.findViewById(R.id.progressBar)
+
+        // Camera UI
+        viewFinder = view.findViewById(R.id.viewFinder)
+        buttonRecord = view.findViewById(R.id.buttonRecord)
+        buttonStartCamera = view.findViewById(R.id.buttonStartCamera)
+        emptyStateLayout = view.findViewById(R.id.emptyStateLayout)
 
         // stats header
         txtTotalCount = view.findViewById(R.id.textTotalCount)
@@ -163,9 +190,113 @@ class ContributeFragment : Fragment() {
             }
         }
 
+        buttonStartCamera?.setOnClickListener {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                requestPermissionsLauncher.launch(REQUIRED_PERMISSIONS)
+            }
+        }
+
+        buttonRecord?.setOnClickListener { captureVideo() }
+
         setupRecentVideosRecycler()
         loadRecentVideosWithPermission()
         loadUserContributions()
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+
+        cameraProviderFuture.addListener({
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(viewFinder?.surfaceProvider)
+            }
+
+            val recorder = Recorder.Builder()
+                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                .build()
+            videoCapture = VideoCapture.withOutput(recorder)
+
+            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+            try {
+                cameraProvider.unbindAll()
+                cameraProvider.bindToLifecycle(viewLifecycleOwner, cameraSelector, preview, videoCapture)
+                
+                // UI Switch
+                emptyStateLayout?.visibility = View.GONE
+                buttonStartCamera?.visibility = View.GONE
+                buttonRecord?.visibility = View.VISIBLE
+                viewFinder?.visibility = View.VISIBLE
+                videoView?.visibility = View.GONE
+
+            } catch (exc: Exception) {
+                Log.e(TAG, "Use case binding failed", exc)
+            }
+
+        }, ContextCompat.getMainExecutor(requireContext()))
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun captureVideo() {
+        val videoCapture = this.videoCapture ?: return
+
+        buttonRecord?.isEnabled = false
+
+        val curRecording = recording
+        if (curRecording != null) {
+            curRecording.stop()
+            recording = null
+            return
+        }
+
+        val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US).format(System.currentTimeMillis())
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Gestura-Contributions")
+            }
+        }
+
+        val mediaStoreOutputOptions = MediaStoreOutputOptions
+            .Builder(requireContext().contentResolver, MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            .setContentValues(contentValues)
+            .build()
+
+        recording = videoCapture.output
+            .prepareRecording(requireContext(), mediaStoreOutputOptions)
+            .withAudioEnabled()
+            .start(ContextCompat.getMainExecutor(requireContext())) { recordEvent ->
+                when(recordEvent) {
+                    is VideoRecordEvent.Start -> {
+                        buttonRecord?.apply {
+                            setImageResource(android.R.drawable.ic_media_pause)
+                            isEnabled = true
+                        }
+                    }
+                    is VideoRecordEvent.Finalize -> {
+                        if (!recordEvent.hasError()) {
+                            onVideoSelected(recordEvent.outputResults.outputUri)
+                        } else {
+                            recording?.close()
+                            recording = null
+                            Log.e(TAG, "Video recording error: ${recordEvent.error}")
+                        }
+                        buttonRecord?.apply {
+                            setImageResource(android.R.drawable.ic_menu_camera)
+                            isEnabled = true
+                        }
+                    }
+                }
+            }
     }
 
     private fun setupRecentVideosRecycler() {
@@ -184,7 +315,7 @@ class ContributeFragment : Fragment() {
         if (ContextCompat.checkSelfPermission(requireContext(), permission) == PackageManager.PERMISSION_GRANTED) {
             loadRecentVideos()
         } else {
-            requestVideoPermissionLauncher.launch(permission)
+            // We don't force-request this one as it's optional for the recent list
         }
     }
 
@@ -210,9 +341,6 @@ class ContributeFragment : Fragment() {
         }
     }
 
-    // --------------------------------------------------------------------
-    //  Video picking / preview
-    // --------------------------------------------------------------------
     private fun launchVideoPicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
@@ -223,11 +351,19 @@ class ContributeFragment : Fragment() {
 
     private fun onVideoSelected(uri: Uri) {
         selectedVideoUri = uri
+        
+        // UI cleanup
+        viewFinder?.visibility = View.GONE
+        buttonRecord?.visibility = View.GONE
+        emptyStateLayout?.visibility = View.GONE
+        buttonStartCamera?.visibility = View.GONE
+        
         videoView?.apply {
             visibility = View.VISIBLE
             setVideoURI(uri)
             setOnPreparedListener { mp ->
-                mp.seekTo(1)
+                mp.isLooping = true
+                start()
             }
         }
         statusText?.text = "Video selected"
@@ -240,9 +376,6 @@ class ContributeFragment : Fragment() {
         buttonShowReference?.isEnabled = !loading
     }
 
-    // --------------------------------------------------------------------
-    //  Reference video
-    // --------------------------------------------------------------------
     private fun normalizeDocId(word: String): String =
         word.trim()
             .lowercase()
@@ -267,12 +400,10 @@ class ContributeFragment : Fragment() {
                         stopPlayback()
                         visibility = View.GONE
                     }
-                    statusText?.text =
-                        "No reference video for \"$displayWord\" yet."
+                    statusText?.text = "No reference video for \"$displayWord\" yet."
                     return@launch
                 }
 
-                // Changed "storagePath" to "storagepath" to match Firestore screenshot
                 val storagePath = doc.getString("storagepath")
 
                 if (storagePath.isNullOrEmpty()) {
@@ -280,8 +411,7 @@ class ContributeFragment : Fragment() {
                         stopPlayback()
                         visibility = View.GONE
                     }
-                    statusText?.text =
-                        "No reference video path configured for \"$displayWord\"."
+                    statusText?.text = "No reference video path configured for \"$displayWord\"."
                     return@launch
                 }
 
@@ -297,8 +427,7 @@ class ContributeFragment : Fragment() {
                     }
                 }
 
-                statusText?.text =
-                    "Showing reference for \"$displayWord\""
+                statusText?.text = "Showing reference for \"$displayWord\""
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -306,17 +435,13 @@ class ContributeFragment : Fragment() {
                     stopPlayback()
                     visibility = View.GONE
                 }
-                statusText?.text =
-                    "Failed to load reference: ${e.localizedMessage}"
+                statusText?.text = "Failed to load reference: ${e.localizedMessage}"
             } finally {
                 setLoading(false)
             }
         }
     }
 
-    // --------------------------------------------------------------------
-    //  Submit sample
-    // --------------------------------------------------------------------
     private fun normalizeWord(value: String): String {
         return value.trim().lowercase().replace("\\s+".toRegex(), "_")
     }
@@ -337,14 +462,13 @@ class ContributeFragment : Fragment() {
         }
 
         if (videoUri == null) {
-            Toast.makeText(requireContext(), "Select a video first", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Select or record a video first", Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
             setLoading(true)
             try {
-                // pipeline.run sends the video to the extraction server (http://10.0.2.2:8000/extract)
                 val pipeline = AslSamplePipeline(requireContext())
                 val result = withContext(Dispatchers.IO) {
                     pipeline.run(word, videoUri)
@@ -358,10 +482,8 @@ class ContributeFragment : Fragment() {
                 val predictedNorm = normalizeWord(predictedWord)
                 val isMismatch = typedNorm != predictedNorm
 
-                // Standard contribution path: Upload the video to Firebase Storage
                 val (storagePath, downloadUrl) = uploadContributionVideo(videoUri, typedWord)
                 
-                // Dev payload structure to match standard Contribute payload exactly (as seen in Screenshot 2)
                 val payload = hashMapOf(
                     "word" to typedWord,
                     "typedWord" to typedWord,
@@ -370,7 +492,7 @@ class ContributeFragment : Fragment() {
                     "keypoints" to result.keypoints.toList(),
                     "videoUrl" to downloadUrl,
                     "videoStoragePath" to storagePath,
-                    "userEmail" to "admin@gmail.com",
+                    "userEmail" to email,
                     "status" to "accepted",
                     "createdAt" to System.currentTimeMillis(),
                     "isMismatch" to isMismatch
@@ -398,12 +520,12 @@ class ContributeFragment : Fragment() {
             }
         }
     }
+
     private suspend fun uploadContributionVideo(
         videoUri: Uri,
         word: String
     ): Pair<String, String> {
-        val uid = auth.currentUser?.uid
-            ?: throw IllegalStateException("User is not logged in")
+        val uid = auth.currentUser?.uid ?: throw IllegalStateException("User is not logged in")
 
         val safeWord = word.trim().lowercase().replace("\\s+".toRegex(), "_")
         val fileName = "${System.currentTimeMillis()}_${safeWord}.mp4"
@@ -411,43 +533,28 @@ class ContributeFragment : Fragment() {
 
         val ref = storage.reference.child(storagePath)
 
-        Log.d("UPLOAD", "Starting upload to $storagePath")
-
         withTimeout(30000) {
             ref.putFile(videoUri).await()
         }
-
-        Log.d("UPLOAD", "Upload complete")
 
         val downloadUrl = ref.downloadUrl.await().toString()
         return storagePath to downloadUrl
     }
 
-    // --------------------------------------------------------------------
-    //  Real stats + “Your Contributions” list
-    // --------------------------------------------------------------------
-
     private data class UserContribution(
         val word: String,
-        val statusLabel: String,   // "approved" or "pending"
+        val statusLabel: String,
         val createdAt: Timestamp?,
         val isApproved: Boolean
     )
 
     private fun loadUserContributions() {
         val email = auth.currentUser?.email
-        if (email.isNullOrBlank()) {
-            txtTotalCount?.text = "0"
-            txtApprovedCount?.text = "0"
-            txtPendingCount?.text = "0"
-            contributionsContainer?.removeAllViews()
-            return
-        }
+        if (email.isNullOrBlank()) return
 
         lifecycleScope.launch {
             setLoading(true)
             try {
-                // Check for both the logged in user and the dev admin email
                 val emailQueryList = listOfNotNull(email, "admin@gmail.com").distinct()
 
                 val acceptedSnap = firestore.collection("asl_accepted")
@@ -468,12 +575,9 @@ class ContributeFragment : Fragment() {
                 txtApprovedCount?.text = acceptedCount.toString()
                 txtPendingCount?.text = pendingCount.toString()
 
-                // Build list of individual contributions
                 val allContrib = mutableListOf<UserContribution>()
                 allContrib += mapSnapshotToContrib(acceptedSnap, true)
                 allContrib += mapSnapshotToContrib(pendingSnap, false)
-
-                // most recent first
                 allContrib.sortByDescending { it.createdAt?.seconds ?: 0L }
 
                 renderContributions(allContrib)
@@ -485,13 +589,9 @@ class ContributeFragment : Fragment() {
         }
     }
 
-    private fun mapSnapshotToContrib(
-        snap: QuerySnapshot,
-        approved: Boolean
-    ): List<UserContribution> {
+    private fun mapSnapshotToContrib(snap: QuerySnapshot, approved: Boolean): List<UserContribution> {
         val list = mutableListOf<UserContribution>()
         for (doc in snap.documents) {
-            // Check both "word" and "Label" (screenshot uses Label)
             val word = doc.getString("word") ?: doc.getString("Label") ?: "(unknown)"
             val ts = doc.getTimestamp("createdAt")
             list += UserContribution(
@@ -507,7 +607,6 @@ class ContributeFragment : Fragment() {
     private fun renderContributions(items: List<UserContribution>) {
         val container = contributionsContainer ?: return
         val inflater = LayoutInflater.from(requireContext())
-
         container.removeAllViews()
 
         if (items.isEmpty()) {
@@ -520,12 +619,7 @@ class ContributeFragment : Fragment() {
         }
 
         for (item in items) {
-            val row = inflater.inflate(
-                R.layout.item_contribution,
-                container,
-                false
-            )
-
+            val row = inflater.inflate(R.layout.item_contribution, container, false)
             val wordText = row.findViewById<TextView>(R.id.textGestureWord)
             val statusChip = row.findViewById<TextView>(R.id.textStatusChip)
             val dateText = row.findViewById<TextView>(R.id.textCreatedDate)
@@ -533,23 +627,23 @@ class ContributeFragment : Fragment() {
             wordText.text = item.word
             statusChip.text = item.statusLabel
 
-            // simple date string
             val dateStr = item.createdAt?.toDate()?.let { date ->
-                android.text.format.DateFormat.format("yyyy-MM-dd", date)
-                    .toString()
+                android.text.format.DateFormat.format("yyyy-MM-dd", date).toString()
             } ?: ""
-
             dateText.text = dateStr
 
-            // Use a color or a background that exists
             if (item.isApproved) {
                 statusChip.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark))
             } else {
                 statusChip.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_orange_dark))
             }
-
             container.addView(row)
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        cameraExecutor.shutdown()
     }
 
     class RecentVideosAdapter(private val onClick: (RecentVideoItem) -> Unit) : RecyclerView.Adapter<RecentVideosAdapter.VideoViewHolder>() {
@@ -567,9 +661,17 @@ class ContributeFragment : Fragment() {
                 itemView.findViewById<TextView>(R.id.textName).text = item.name
                 itemView.setOnClickListener { onClick(item) }
                 
-                val videoView = itemView.findViewById<VideoView>(R.id.itemVideoView)
-                videoView.setVideoURI(item.uri)
-                videoView.seekTo(1)
+                val thumbnailView = itemView.findViewById<ImageView>(R.id.itemThumbnail)
+                try {
+                    val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        itemView.context.contentResolver.loadThumbnail(item.uri, Size(160, 100), null)
+                    } else {
+                        ThumbnailUtils.createVideoThumbnail(item.uri.path ?: "", MediaStore.Video.Thumbnails.MINI_KIND)
+                    }
+                    thumbnailView.setImageBitmap(bitmap)
+                } catch (e: Exception) {
+                    thumbnailView.setImageResource(R.drawable.ic_camera_alt_24)
+                }
             }
         }
     }

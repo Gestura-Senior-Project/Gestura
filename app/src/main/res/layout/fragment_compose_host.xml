@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground"
+    android:background="@color/app_background"
     android:fillViewport="true"
     tools:context=".ui.OnDeviceCaptionFragment">
 
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="ASL Translation"
-            android:textColor="?android:attr/textColorPrimary"
+            android:textColor="@color/text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="Sign to translate"
-            android:textColor="?android:attr/textColorSecondary"
+            android:textColor="@color/text_secondary"
             android:textSize="11sp" />
 
         <!-- Camera Card -->
@@ -40,9 +40,10 @@
             android:layout_height="320dp"
             android:layout_marginTop="14dp"
             android:layout_marginBottom="20dp"
-            app:cardBackgroundColor="#050A1F"
-            app:cardCornerRadius="20dp"
-            app:cardElevation="3dp"
+            app:cardBackgroundColor="@color/primary_dark_blue"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:cardPreventCornerOverlap="false"
             app:cardUseCompatPadding="false">
 
             <FrameLayout
@@ -54,7 +55,8 @@
                     android:id="@+id/previewView"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:visibility="gone" />
+                    android:visibility="gone"
+                    app:implementationMode="compatible" />
 
                 <!-- Video (Old legacy View) -->
                 <VideoView
@@ -77,7 +79,7 @@
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:src="@drawable/ic_camera_alt_24"
-                        app:tint="#4B5563" />
+                        app:tint="@color/text_muted" />
 
                     <TextView
                         android:id="@+id/emptyText"
@@ -85,7 +87,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:text="Camera is off"
-                        android:textColor="#9CA3AF"
+                        android:textColor="@color/text_muted"
                         android:textSize="15sp" />
                 </LinearLayout>
 
@@ -95,9 +97,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
-                    android:background="#80000000"
+                    android:background="#B3050A1F"
                     android:orientation="vertical"
-                    android:padding="12dp"
+                    android:padding="16dp"
                     android:visibility="gone">
 
                     <TextView
@@ -134,7 +136,6 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <!-- hidden legacy views -->
             <View
                 android:id="@+id/buttonUploadPrimary"
                 android:layout_width="0dp"
@@ -147,56 +148,45 @@
                 android:layout_height="0dp"
                 android:visibility="gone" />
 
-            <!-- Play/Pause Button -->
             <TextView
                 android:id="@+id/buttonPlayPause"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:layout_weight="0.8"
                 android:background="@drawable/bg_secondary_button"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
                 android:text="Play"
-                android:textAllCaps="false"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="13sp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <Space
-                android:layout_width="10dp"
+                android:layout_width="12dp"
                 android:layout_height="0dp" />
 
-            <!-- Start Live Translation Button -->
             <TextView
                 android:id="@+id/btnStartLive"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_weight="1"
+                android:layout_height="52dp"
+                android:layout_weight="1.2"
                 android:background="@drawable/bg_primary_button"
-                android:drawableStart="@drawable/ic_camera_alt_24"
-                android:drawablePadding="8dp"
                 android:gravity="center"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
                 android:text="Start Live Translation"
-                android:textAllCaps="false"
                 android:textColor="@android:color/white"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 android:textStyle="bold" />
 
             <Space
-                android:layout_width="10dp"
+                android:layout_width="12dp"
                 android:layout_height="0dp" />
 
             <FrameLayout
                 android:id="@+id/buttonClear"
-                android:layout_width="44dp"
-                android:layout_height="44dp"
-                android:background="@drawable/bg_input"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_secondary_button"
                 android:clickable="true"
                 android:focusable="true"
-                android:foreground="?attr/selectableItemBackgroundBorderless"
                 android:visibility="gone">
 
                 <ImageView
@@ -204,100 +194,109 @@
                     android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_round_refresh_24"
-                    app:tint="?android:attr/textColorPrimary" />
+                    app:tint="@color/text_primary" />
             </FrameLayout>
         </LinearLayout>
 
+        <!-- Recent Videos Section -->
         <LinearLayout
             android:id="@+id/recentVideosGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="28dp"
             android:background="@drawable/bg_section_card"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="20dp">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Recent videos"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="13sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:text="Swipe and tap to translate"
-                android:textColor="?android:attr/textColorSecondary"
+                android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerRecentVideos"
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:layout_marginTop="12dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:clipToPadding="false" />
         </LinearLayout>
 
-        <!-- Current Translation -->
+        <!-- Current Translation Section -->
         <LinearLayout
             android:id="@+id/currentTranslationGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="16dp"
             android:background="@drawable/bg_section_card"
             android:orientation="vertical"
-            android:padding="14dp"
+            android:padding="20dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Current translation"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="13sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/textCurrentTranslation"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp"
-                tools:text="Hello, how are you?\n(95.4% confident)" />
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text_secondary"
+                android:textSize="14sp"
+                tools:text="Hello, how are you?" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="20dp"
                 android:orientation="horizontal">
 
-                <Button
+                <TextView
                     android:id="@+id/buttonSpeak"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_primary_button"
+                    android:gravity="center"
                     android:text="Speak"
-                    android:textAllCaps="false"
                     android:textColor="@android:color/white"
-                    android:textSize="12sp" />
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
-                <Button
+                <Space
+                    android:layout_width="12dp"
+                    android:layout_height="0dp" />
+
+                <TextView
                     android:id="@+id/buttonSave"
-                    android:layout_width="wrap_content"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
                     android:background="@drawable/bg_secondary_button"
+                    android:gravity="center"
                     android:text="Save"
-                    android:textAllCaps="false"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textSize="12sp" />
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- History -->
+        <!-- History Section -->
         <LinearLayout
             android:id="@+id/historyGroup"
             android:layout_width="match_parent"
@@ -305,24 +304,28 @@
             android:layout_marginTop="16dp"
             android:background="@drawable/bg_section_card"
             android:orientation="vertical"
-            android:padding="14dp"
+            android:padding="20dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="History"
-                android:textColor="?android:attr/textColorPrimary"
-                android:textSize="13sp"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:id="@+id/historyContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:orientation="vertical" />
         </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="40dp" />
 
     </LinearLayout>
 </ScrollView>
