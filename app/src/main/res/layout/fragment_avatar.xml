@@ -2,6 +2,7 @@
 <androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -17,7 +18,7 @@
             android:id="@+id/txtAvatarPageTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Avatar Generation"
+            android:text="ASL Dictionary"
             android:textColor="?android:attr/textColorPrimary"
             android:textSize="24sp"
             android:textStyle="bold" />
@@ -27,7 +28,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:text="Convert text to sign language animation"
+            android:text="Search for gestures to see them signed"
             android:textColor="?android:attr/textColorSecondary"
             android:textSize="16sp" />
 
@@ -49,7 +50,7 @@
                     android:id="@+id/txtAvatarPreviewLabel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Preview"
+                    android:text="Video Preview"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -57,11 +58,19 @@
                 <FrameLayout
                     android:id="@+id/avatarPreviewBox"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp"
+                    android:layout_height="250dp"
                     android:layout_marginTop="12dp"
                     android:background="@drawable/bg_input">
 
+                    <VideoView
+                        android:id="@+id/dictionaryVideoView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+
                     <LinearLayout
+                        android:id="@+id/avatarPlaceholder"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:gravity="center"
@@ -71,7 +80,7 @@
                             android:id="@+id/imgAvatarPreview"
                             android:layout_width="64dp"
                             android:layout_height="64dp"
-                            android:src="@drawable/ic_avatar"
+                            android:src="@drawable/ic_asl"
                             app:tint="?android:attr/textColorSecondary" />
 
                         <TextView
@@ -79,9 +88,17 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="Ready for input"
+                            android:text="Search for a word below"
                             android:textColor="?android:attr/textColorSecondary"
                             android:textSize="14sp" />
+
+                        <ProgressBar
+                            android:id="@+id/avatarLoadingProgress"
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone" />
                     </LinearLayout>
                 </FrameLayout>
 
@@ -90,7 +107,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="Input Text"
+                    android:text="Word to Lookup"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -98,12 +115,11 @@
                 <EditText
                     android:id="@+id/etAvatarInput"
                     android:layout_width="match_parent"
-                    android:layout_height="120dp"
+                    android:layout_height="56dp"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/bg_input"
-                    android:gravity="top|start"
-                    android:hint="Enter text to translate..."
-                    android:inputType="textMultiLine|textCapSentences"
+                    android:hint="e.g. Hello, Help, Family..."
+                    android:inputType="textCapSentences"
                     android:padding="16dp"
                     android:textColor="?android:attr/textColorPrimary"
                     android:textColorHint="?android:attr/textColorSecondary"
@@ -115,7 +131,7 @@
                     android:layout_height="56dp"
                     android:layout_marginTop="20dp"
                     android:background="@drawable/bg_primary_button"
-                    android:text="Generate Animation"
+                    android:text="Find Video"
                     android:textAllCaps="false"
                     android:textColor="?attr/colorOnPrimary"
                     android:textSize="16sp"

@@ -272,7 +272,8 @@ class ContributeFragment : Fragment() {
                     return@launch
                 }
 
-                val storagePath = doc.getString("storagePath")
+                // Changed "storagePath" to "storagepath" to match Firestore screenshot
+                val storagePath = doc.getString("storagepath")
 
                 if (storagePath.isNullOrEmpty()) {
                     referenceVideoView?.apply {

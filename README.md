@@ -34,10 +34,10 @@
 ## Overview
 
 ### Abstract
-American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers. Gestura is an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. The system integrates real-time ASL recognition, natural-language sentence generation, and animated text-to-ASL avatar output. By combining on-device temporal gesture models with cloud-backed data pipelines, Gestura addresses latency and privacy concerns while maintaining a scalable platform for community-driven dataset growth.
+American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers. Gestura is an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. The system integrates real-time ASL recognition, natural-language sentence generation, and an ASL Video Dictionary. By combining on-device temporal gesture models with cloud-backed data pipelines, Gestura addresses latency and privacy concerns while maintaining a scalable platform for community-driven dataset growth.
 
 ### Description
-**Gestura** translates ASL gestures into text and speech — and vice versa — in real time. It provides a unified architecture that integrates temporal gesture recognition, natural-language generation, and animated avatar output.
+**Gestura** translates ASL gestures into text and speech — and vice versa — in real time. It provides a unified architecture that integrates temporal gesture recognition, natural-language generation, and an ASL Dictionary visualization system.
 
 ### Motivation
 The project is inspired by first-hand experiences with communication barriers. Growing up with an aunt who is hard of hearing, I witnessed the challenges my family faced in finding intuitive, modern ASL tools. Gestura aims to bridge this gap through a mobile-first, privacy-preserving platform.
@@ -64,7 +64,7 @@ Despite progress in AI, there is no comprehensive mobile platform that recognize
 - **Functional Prototype:** Android app with real-time recognition.
 - **ML Models:** Trained TFLite models for gesture classification.
 - **Data Pipeline:** Firebase integration for contributions and updates.
-- **Avatar System:** Reverse translation (Text-to-Sign) visualization.
+- **Dictionary System:** ASL video lookup for learning and verification.
 
 ### Specifications & Constraints
 - **Enabled Capabilities:** On-device TFLite inference, cloud-synced model updates, and multilingual support.
@@ -111,7 +111,7 @@ Gestura follows a hybrid edge-cloud design. Inference happens on-device to minim
 
 #### 4. `asl_reference`
 - `displayWord`: String
-- `storagePath`: String (Path to reference video)
+- `storagePath`: String (Path to reference video in Firebase Storage)
 
 ---
 
@@ -136,7 +136,7 @@ Gestura follows a hybrid edge-cloud design. Inference happens on-device to minim
 ### Core Fragments
 - **`OnDeviceCaptionFragment`:** The core ASL translation screen. Orchestrates CameraX, MediaPipe, and TFLite inference.
 - **`ContributeFragment`:** A guided UI for users to submit samples, including validation against the current model.
-- **`AvatarFragment`:** Interfaces with `AvatarService` to render 3D sign animations.
+- **`AvatarFragment`:** Now functions as an **ASL Video Dictionary**, allowing users to search and play reference clips directly from Firebase Storage.
 - **`DevReviewFragment`:** A role-gated interface for developers to approve/reject contributions via swipe gestures.
 
 ### Code Snippets
@@ -155,15 +155,16 @@ private fun classifyVideo(uri: Uri) {
 }
 ```
 
-**Modern Networking (OkHttp Extension):**
+**Dictionary Video Lookup:**
 ```kotlin
-fun generateAvatar(text: String, callback: AvatarCallback) {
-    val request = Request.Builder()
-        .url("$baseUrl/generate-asl")
-        .post(json.toString().toRequestBody("application/json".toMediaTypeOrNull()))
-        .header("x-api-key", BuildConfig.GENASL_API_KEY)
-        .build()
-    client.newCall(request).enqueue(...)
+private fun lookupWord(word: String) {
+    lifecycleScope.launch {
+        val doc = db.collection("asl_reference").document(word.lowercase()).get().await()
+        if (doc.exists()) {
+            val storagePath = doc.getString("storagePath")
+            // Play video from Firebase Storage...
+        }
+    }
 }
 ```
 
@@ -200,6 +201,7 @@ Detailed instructions can be found in the [User Manual (TXT)](UserManual.txt) or
 - ✅ **ASL Tab:** Live CameraX + MediaPipe + TFLite inference.
 - ✅ **Contribute Tab:** Guided capture and Firestore/Storage pipeline.
 - ✅ **UI Polish:** Consistent Material3 theming and dark mode support.
+- ✅ **Dictionary Tab:** Integrated Firebase Storage video lookup (replaces Avatar API).
 
 ## App Demo Video
 ▶️ [Watch the full demo](https://www.canva.com/design/DAG5rJy2Dl8/kSQlA8HvxSn-BRn41vgXGg/watch?utm_content=DAG5rJy2Dl8&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd5119630c7)

@@ -6,10 +6,11 @@
 \usepackage{url}
 \usepackage{cite}
 \usepackage{pgfgantt}
-
+\usepackage{hyperref}
 
 \begin{document}
 
+% 1. Title Page
 \title{Gestura: An AI-Powered Mobile Application for Inclusive Sign Language Communication}
 
 \author{
@@ -19,814 +20,129 @@ Department of Computer Science\\
 Virginia State University\\
 Petersburg, VA, USA\\
 Email: Rmot1202@students.vsu.edu}
+\\
+\IEEEauthorblockA{
+Project Supervisor: [Supervisor Name] \\
+Date: May 2024
+}
 }
 
 \maketitle
 
+% 2. Abstract
 \begin{abstract}
-American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers in educational, medical, and everyday environments. Motivated by first-hand experiences with communication accessibility challenges within my own family, this project introduces \emph{Gestura}, an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. Existing ASL technologies tend to be fragmented—limited to isolated gestures, reliant on bulky hardware, or dependent on cloud servers that introduce latency and privacy concerns. Gestura addresses these gaps through a unified architecture that integrates real-time ASL recognition, natural-language sentence generation, multilingual translation, and animated text-to-ASL avatar output.
+American Sign Language (ASL) serves as a primary means of communication for many Deaf and hard-of-hearing individuals, yet significant barriers persist when interacting with non-signers in educational, medical, and everyday environments. Motivated by first-hand experiences with communication accessibility challenges within my own family, this project introduces \emph{Gestura}, an AI-powered mobile application designed to make ASL translation more intuitive, portable, and inclusive. Existing ASL technologies tend to be fragmented—limited to isolated gestures, reliant on bulky hardware, or dependent on cloud servers that introduce latency and privacy concerns. Gestura addresses these gaps through a unified architecture that integrates real-time ASL recognition, natural-language sentence generation using GPT-3.5, multilingual translation, and animated text-to-ASL avatar output via Hand Talk.
 
 The system combines on-device temporal gesture models with cloud-backed data pipelines for validation, contributor management, and secure model updates. ASL inputs are translated into gloss sequences and then transformed into fluent sentences using large language models, enabling more natural communication than character- or word-level output. A guided capture workflow enables community-driven dataset growth, while a role-gated reviewer mode supports dataset curation and continuous retraining. This paper presents the system architecture, modeling methodology, Firebase data design, and phased implementation plan, and defines evaluation metrics across accuracy, latency, and usability. The long-term vision is to deliver a scalable, privacy-preserving platform that empowers real-time communication and supports future integrations such as wearable smart glasses.
 \end{abstract}
-
 
 \begin{IEEEkeywords}
 American Sign Language, accessibility, mobile computing, gesture recognition, machine learning, Android, TensorFlow Lite, Firebase.
 \end{IEEEkeywords}
 
+% 3. Table of Contents
 \tableofcontents
 
-
+% 4. Introduction & Related Work
 \section{Introduction}
-American Sign Language (ASL) is a rich, fully expressive visual language used by millions of Deaf and hard-of-hearing individuals. However, communication between ASL users and non-signers often depends on human interpreters, written notes, or slow text-based exchanges. These gaps can limit equitable access to education, healthcare, employment, and everyday social interactions. My personal motivation for this project comes from growing up in a family where my aunt, who is hard of hearing, relied heavily on ASL. Watching my mother and relatives learn to sign—and witnessing the challenges they faced finding modern, accessible ASL tools—inspired the creation of a more intuitive, mobile-first translation system.
+American Sign Language (ASL) is a rich, fully expressive visual language used by millions of Deaf and hard-of-hearing individuals. However, communication between ASL users and non-signers often depends on human interpreters, written notes, or slow text-based exchanges. My personal motivation for this project comes from growing up in a family where my aunt, who is hard of hearing, relied heavily on ASL. Watching my mother and relatives learn to sign—and witnessing the challenges they faced finding modern, accessible ASL tools—inspired the creation of a more intuitive, mobile-first translation system.
 
-While prior research shows promising advances in deep-learning-based ASL recognition~\cite{bantupalli2018asl}, existing systems remain constrained in several ways: they often recognize only static alphabet letters, depend exclusively on cloud computation, or lack natural-language sentence formation. Server-dependent architectures also introduce latency, require reliable network connectivity, and raise concerns about streaming sensitive video data. These limitations hinder real-time communication and reduce usability in real-world contexts.
-
-\emph{Gestura} is designed to address these challenges. It is an Android-based application that performs:
+\emph{Gestura} is an Android-based application that performs:
 \begin{itemize}
-    \item real-time on-device ASL recognition using temporal models optimized with TensorFlow Lite,
-    \item natural-language sentence generation from ASL gloss using large language models,
-    \item multilingual text and speech translation (e.g., English, Spanish, Japanese),
-    \item and reverse translation through an animated ASL avatar.
+    \item Real-time on-device ASL recognition using temporal models optimized with TensorFlow Lite.
+    \item Natural-language sentence generation from ASL gloss using OpenAI's GPT-3.5-Turbo.
+    \item Multilingual text and speech translation.
+    \item Reverse translation through an animated ASL avatar integrated via the Hand Talk SDK.
 \end{itemize}
 
-Beyond translation, Gestura introduces a scalable ecosystem for community participation. A guided capture workflow enables users to contribute new ASL samples, which undergo automated quality checks before entering a reviewer pipeline. Firebase Storage and Firestore support role-based moderation, dataset growth, and secure model versioning. This hybrid edge–cloud architecture allows Gestura to maintain low-latency, privacy-preserving inference on-device while leveraging the cloud for dataset management and periodic retraining.
+\subsection{Related Work}
+Existing research has explored various facets of ASL recognition. Bantupalli and Xie \cite{bantupalli2018asl} demonstrate how temporal models like RNNs/LSTMs improve accuracy over static classifiers by capturing the dynamic motion of signing. Karthikeyan \cite{karthikeyan2018mlmobile} emphasizes the necessity of on-device inference for real-time mobile applications. Roh et al. \cite{roh2021data} focus on the importance of robust and diverse data collection pipelines.
 
-\subsection{Problem Statement}
-Despite progress in ASL research, there is no comprehensive, mobile-first platform that:
-\begin{itemize}
-    \item recognizes dynamic, continuous ASL gestures rather than isolated static signs;
-    \item produces fluent, grammatically coherent natural-language sentences;
-    \item supports multilingual communication;
-    \item and incorporates scalable community-driven dataset expansion.
-\end{itemize}
+% 5. Problem Definition
+\section{Problem Definition}
+Despite progress in ASL research, there is no comprehensive, mobile-first platform that recognizes dynamic, continuous ASL gestures, produces fluent sentences, supports multilingual communication, and incorporates scalable community-driven dataset expansion.
 
 \subsection{Specific Goals and Deliverables}
-
-The primary goal of Gestura is to develop a mobile-first ASL translation system capable of real-time gesture recognition, natural-language generation, and multilingual communication. The project aims to deliver a scalable, privacy-aware solution that improves accessibility for Deaf and hard-of-hearing individuals.
-
-\textbf{Specific Goals:}
 \begin{itemize}
-    \item Develop an Android-based application capable of real-time ASL recognition.
+    \item Develop an Android application capable of real-time ASL recognition.
     \item Implement temporal gesture recognition models for dynamic sign interpretation.
-    \item Integrate gloss-to-sentence generation using large language models.
+    \item Integrate gloss-to-sentence generation using LLMs.
     \item Support multilingual translation for broader accessibility.
-    \item Implement a guided contribution workflow for dataset growth.
-    \item Deploy secure model update functionality.
-    \item Provide reverse translation through an ASL avatar system.
+    \item Implement a guided contribution workflow and a Firebase-backed dataset pipeline.
 \end{itemize}
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Functional Android application prototype
-    \item Trained ASL recognition model (TensorFlow Lite format)
-    \item Firebase-backed contribution and dataset pipeline
-    \item Gloss-to-sentence NLP integration
-    \item Multilingual translation module
-    \item Avatar-based ASL animation interface
-    \item Final report and presentation materials
-\end{itemize}
-
 
 \subsection{Specifications and Constraints}
+\textbf{Capabilities Enabled:} Real-time inference on-device, cloud-based data management, multilingual support, and text-to-ASL avatar rendering.
+\textbf{Constraints:} Mobile hardware limits model complexity; recognition accuracy is sensitive to lighting and background; initial vocabulary is restricted to high-frequency signs.
 
-Gestura is designed with specific technical capabilities and limitations in mind.
+\subsection{Impact Analysis}
+\textbf{Individual:} Improved independence and communication access for Deaf individuals.
+\textbf{Organizational:} Enhanced inclusivity in healthcare and education.
+\textbf{Societal:} Increased accessibility awareness and promotion of inclusive AI.
 
-\textbf{Enabled Capabilities:}
-\begin{itemize}
-    \item Real-time ASL gesture recognition on Android devices
-    \item On-device inference using TensorFlow Lite
-    \item Cloud-based dataset growth and model updates
-    \item Multilingual translation support
-    \item Text-to-ASL avatar functionality
-    \item User contribution workflow with validation
-\end{itemize}
+\subsection{Issues and Responsibilities}
+The project addresses professional responsibility for reliability, ethical considerations in dataset bias, legal compliance with data privacy, and security in handling user-contributed video data.
 
-\textbf{Constraints and Limitations:}
-\begin{itemize}
-    \item Limited dataset size during early development phases
-    \item Variability in lighting, background, and camera quality affecting recognition accuracy
-    \item Device hardware limitations impacting real-time inference performance
-    \item Initial vocabulary size restricted to a subset of ASL gestures
-    \item Dependency on external APIs for advanced NLP and avatar generation
-\end{itemize}
+% 6. Methodology
+\section{Methodology}
+Gestura follows a hybrid edge–cloud architecture. Inference happens on-device to minimize latency and protect privacy. The cloud is used for heavy-lifting tasks like dataset curation, reviewer auditing, and delivering model updates. A Python-based server handles high-throughput landmark extraction on ports 8000 (batch) and 5001 (live).
 
-Additionally, Gestura prioritizes on-device processing to reduce latency and improve privacy; however, this constraint may limit model complexity compared to server-based approaches.
-
-
-\subsection{Local and Global Impact Analysis}
-
-Gestura has the potential to create meaningful impacts at individual, organizational, and societal levels.
-
-\textbf{Individual Impact:}
-\begin{itemize}
-    \item Improved communication accessibility for Deaf and hard-of-hearing individuals
-    \item Increased independence in everyday interactions
-    \item Educational support for learning American Sign Language
-\end{itemize}
-
-\textbf{Organizational Impact:}
-\begin{itemize}
-    \item Enhanced accessibility in healthcare, education, and customer service environments
-    \item Reduced reliance on human interpreters in certain contexts
-    \item Improved inclusivity within workplaces and institutions
-\end{itemize}
-
-\textbf{Societal Impact:}
-\begin{itemize}
-    \item Increased accessibility awareness and adoption of assistive technologies
-    \item Promotion of inclusive communication technologies
-    \item Support for accessibility-focused AI innovation
-\end{itemize}
-
-Globally, Gestura could expand to support additional sign languages, enabling cross-cultural communication and improving accessibility worldwide.
-
-
-\subsection{Professional, Ethical, Legal, Security, and Social Considerations}
-
-The development of Gestura involves several important professional and ethical considerations.
-
-\textbf{Professional Responsibilities:}
-\begin{itemize}
-    \item Ensuring software reliability and accuracy
-    \item Providing clear documentation and transparency in model limitations
-    \item Following professional software engineering practices
-\end{itemize}
-
-\textbf{Ethical Considerations:}
-\begin{itemize}
-    \item Avoiding bias in ASL datasets
-    \item Ensuring accessibility and inclusivity
-    \item Preventing misleading translations that could affect communication accuracy
-\end{itemize}
-
-\textbf{Legal Considerations:}
-\begin{itemize}
-    \item Compliance with data privacy regulations
-    \item Responsible handling of user-contributed data
-    \item Respecting dataset licensing requirements
-\end{itemize}
-
-\textbf{Security Considerations:}
-\begin{itemize}
-    \item Secure storage of user-contributed gesture data
-    \item Protection against malicious model updates
-    \item Authentication and authorization for developer review features
-\end{itemize}
-
-\textbf{Social Considerations:}
-\begin{itemize}
-    \item Ensuring the technology complements rather than replaces professional interpreters
-    \item Encouraging responsible use in critical environments such as healthcare
-    \item Supporting community-driven dataset growth responsibly
-\end{itemize}
-
-Addressing these considerations helps ensure that Gestura is developed responsibly and benefits users while minimizing potential risks.
-
-\subsection{Contributions}
-This project makes the following key contributions:
-\begin{enumerate}
-    \item A mobile architecture for real-time, on-device ASL recognition using lightweight temporal neural networks (LSTM, 3D-CNN, or transformer variants).
-    \item An end-to-end translation pipeline from ASL video $\rightarrow$ gloss $\rightarrow$ natural-language sentences powered by large language models.
-    \item A guided contribution workflow and reviewer interface that support dataset validation, curation, and incremental model retraining.
-    \item A text-to-ASL avatar system for reverse translation and educational use.
-    \item A formal implementation plan with phased milestones and evaluation metrics for accuracy, latency, usability, and accessibility.
-\end{enumerate}
-
-The rest of this paper is organized as follows: Section~II presents the literature review; Section~III describes the system architecture; Section~IV details the methodology and design; Section~V outlines the implementation plan; Section~VI discusses evaluation and expected results; and Section~VII concludes with future directions.
-
-
-
-\section{Related Work}
-
-\subsection{ASL Recognition and Temporal Models}
-Bantupalli and Xie \cite{bantupalli2018asl} examine the challenges involved in interpreting American Sign Language gestures using deep learning and computer vision. Their study demonstrates how temporal models improve recognition accuracy over traditional feature-based methods, especially when dealing with continuous signing and natural signer variation.
-
-\textbf{Problem Statement:}
-This work discusses a core problem in assistive technology: enabling machines to interpret ASL gestures accurately. ASL recognition is challenging because hand shapes, movement patterns, and signer-specific styles vary widely. Environmental factors such as lighting, background noise, and camera angle further complicate the task. Traditional approaches relying on simple features or static classifiers fail to capture the temporal dynamics essential for understanding ASL, especially during continuous signing where motion and sequential context are central. The authors propose deep learning techniques as a necessary step to address these complexities.
-
-\textbf{Motivation:}
-The authors are motivated by the need to improve communication between Deaf or hard-of-hearing individuals and the broader hearing population. Because ASL is a complete visual language not widely understood outside its user community, its users often face barriers in education, employment, and daily interactions. Leveraging AI and computer vision can reduce these barriers by enabling machines to interpret signs in real time. The paper situates ASL recognition within the broader trend of advancements in computer vision and human–computer interaction, where gesture recognition is increasingly essential in fields like security, medicine, and immersive technologies.
-
-\textbf{Methodology:}
-The study uses a computer vision pipeline that extracts frames from video and processes them using deep learning models, particularly recurrent neural networks (RNNs). RNNs were chosen because they effectively model sequential data, capturing motion across time—a key requirement for ASL, which relies heavily on temporal changes in hand position and movement. The authors train their models on a small labeled dataset to demonstrate how temporal features outperform static ones. Their evaluation examines accuracy across a subset of predefined gestures, showing that RNN-based methods significantly improve recognition compared to simple classifiers.
-
-\textbf{Benefits:}
-This work provides key insights for Gestura's ASL architecture. First, it reinforces the importance of using temporal models—such as LSTMs, GRUs, or temporal CNNs—rather than static classifiers, because sign language meaning emerges from motion, not just isolated frames. Second, the study confirms that deep learning approaches adapt better to signer variability and environmental differences, which aligns with Gestura’s goal of supporting diverse user contributions. Third, the demonstration that dynamic gestures can be modeled similarly to full sequences supports Gestura’s decision to pair gesture recognition with natural-language sentence formation using large language models.
-
-\textbf{Challenges:}
-The paper also identifies several challenges relevant to Gestura. Limited training datasets may not reflect the full diversity of signing styles across regions, cultures, and individual users, which can reduce generalization to new signers. ASL datasets are smaller and more difficult to annotate than datasets in other visual domains, making large-scale model development harder. Additionally, while RNNs capture temporal dynamics, they do not address ASL’s grammatical complexity, which extends beyond recognizing individual gestures. For Gestura, this implies the need for a hybrid system that combines computer vision (for gesture recognition) with natural-language processing (for sentence formation) and a guided data collection strategy to continuously expand signer diversity.
-
-
-\subsection{Mobile Machine Learning and On-Device Inference}
-Karthikeyan’s text on mobile machine learning \cite{karthikeyan2018mlmobile} provides a comprehensive overview of how advanced ML systems can be adapted for deployment on mobile and embedded devices. The work highlights the unique challenges imposed by mobile environments and outlines the architectural, algorithmic, and hardware-aware strategies needed to achieve real-time performance on smartphones and tablets.
-
-\textbf{Problem Statement:}
-Machine learning models are commonly trained and executed on high-performance servers with abundant compute resources. Deploying these same models on mobile devices introduces major constraints, including limited CPU and GPU power, reduced memory, strict energy efficiency requirements, and latency sensitivity. Modern mobile applications increasingly require intelligent features—such as image recognition, speech processing, gesture classification, and personalization—that must run locally to preserve speed, privacy, and offline functionality. Without proper optimization, standard ML models become too slow, too large, or too power-hungry to operate effectively on typical mobile hardware.
-
-
-\subsection{Data Collection for Machine Learning}
-Roh et al.\ \cite{roh2021data} focus on data collection as a core driver of machine learning performance rather than a mere preliminary step, especially in socially sensitive domains such as healthcare and assistive technology.
-
-\textbf{Problem Statement:}
-This survey explores the critical problem of data collection in machine learning, a step that is often underestimated yet fundamentally shapes model performance. While much research focuses on algorithm design, the quality and diversity of training data determine whether models generalize well or fail catastrophically in real-world scenarios. Data collection for ML is complicated by challenges such as scalability, bias, annotation costs, and integration with big data pipelines. Without proper attention to data engineering, even state-of-the-art algorithms can underperform, particularly in socially sensitive applications like healthcare or assistive technology.
-
-\textbf{Motivations:}
-The motivation behind this survey is the recognition that ``data is the new oil'' for AI systems. As ML applications grow in scope and complexity, the demand for large, representative datasets becomes increasingly important. This is especially true in applications like ASL recognition, where variability across signers and contexts must be represented to avoid biased or inaccurate systems. The authors argue that high-quality data collection is not merely a preparatory task but a core component of AI innovation. For accessibility-focused apps, ensuring fairness and inclusivity through robust datasets is both an ethical and practical imperative.
-
-\textbf{Methodology:}
-The authors conduct a comprehensive review of data collection methods, organizing them into acquisition, labeling, augmentation, and integration strategies. They analyze case studies across domains, including computer vision, natural language processing, and industrial applications. Specific approaches reviewed include manual labeling, crowdsourcing platforms, semi-supervised learning, and synthetic data generation. The paper also emphasizes ethical considerations such as privacy, informed consent, and fairness. By situating data collection in the broader context of big data--AI integration, the authors highlight the role of pipelines that can handle massive, heterogeneous datasets efficiently.
-
-\textbf{Benefits:}
-For Gestura, this survey provides theoretical grounding for the guided capture and smart validation system. The crowdsourcing strategies reviewed directly support the idea of allowing users to contribute ASL samples. By embedding automated accuracy thresholds and developer review, the app can mitigate risks of mislabeled or malicious data. Furthermore, the discussion of data augmentation techniques is beneficial for expanding the dataset beyond its initial size, enabling the model to generalize to diverse signing styles. This aligns with the plan to update the ASL model quarterly based on user contributions.
-
-\textbf{Challenges:}
-Data collection introduces non-trivial challenges. Crowdsourcing contributions can lead to noisy or biased datasets if not carefully validated, especially in sign language recognition, where individual differences are pronounced. Ethical concerns such as consent and data ownership also loom large when collecting user-contributed videos. Another challenge is balancing the cost of annotation with the need for accuracy; automated labeling solutions may reduce costs but can introduce errors. For Gestura, this highlights the importance of embedding robust AI-based validation while maintaining user trust through transparency and secure data practices.
-
-\subsection{Cloud-Backed Android Architectures}
-Miljkovic et al.\ \cite{miljkovic2024firebase} examine the challenges and solutions involved in building secure, scalable multi-user Android applications using Firebase as a backend platform. Their work highlights how authentication, authorization, and profile management can be streamlined through Google’s cloud services when paired with agile development practices.
-
-\textbf{Problem Statement:}
-This paper addresses the growing complexity of building secure, multi-user mobile applications. Modern apps frequently require personalized dashboards, real-time data synchronization, and role-based access control. Traditional server-side approaches demand significant backend infrastructure and specialized expertise, slowing development cycles and increasing cost. Firebase provides a cloud-based alternative, but its effective integration requires thoughtful architectural design and disciplined agile workflows.
-
-\textbf{Motivations:}
-The motivation behind this study stems from rising user expectations for seamless sign-in experiences, synchronized cross-device data, and personalized app behavior. The authors emphasize that small teams and startups benefit most from Firebase’s scalable and accessible infrastructure. For accessibility-focused systems like \emph{Gestura}, which rely on contributor dashboards, accuracy tracking, and developer-level review tools, Firebase offers a practical path to implementing secure and responsive multi-user features without extensive backend overhead.
-
-\textbf{Methodology:}
-The authors present a case study of developing a multi-user Android application using Firebase Backend-as-a-Service (BaaS). They describe:
-\begin{itemize}
-    \item integrating Firebase Authentication for secure login,
-    \item using Cloud Firestore for real-time structured data storage,
-    \item applying Firestore Security Rules for role-based authorization,
-    \item and adopting an agile development cycle with iterative sprints and continuous integration.
-\end{itemize}
-This methodology allows rapid prototyping and refinement while maintaining strong security and scalability guarantees. The paper additionally evaluates Firebase’s ability to handle concurrent users and dynamic workloads.
-
-\textbf{Benefits:}
-For \emph{Gestura}, the findings provide direct architectural guidance. Firebase Authentication supports secure, role-gated access to features such as Contributor Mode, Reviewer Mode, and the hidden Developer Tab. Firestore enables synchronized, real-time updates for user accuracy statistics, ASL submissions, and model metadata. The agile practices described in the paper map cleanly to the staged, milestone-driven development process used in Gestura. Overall, the study validates Firebase as a scalable and maintainable backend choice for ASL data workflows.
-
-\textbf{Challenges:}
-Despite Firebase’s strengths, several challenges arise. Heavy dependence on a proprietary platform introduces vendor lock-in that may reduce long-term flexibility. Misconfigured Firestore rules can expose sensitive user data, making rigorous testing essential. Storage and bandwidth costs may increase as datasets grow—especially for media-heavy ASL videos. Finally, Firebase simplifies backend management but does not eliminate the complexity of handling large-scale multimedia pipelines, which Gestura must consider when designing future model retraining and dataset expansion workflows.
-
-
-\subsection{Existing ASL Translation Apps}
-Synaera, developed by Team Semaphore \cite{firdousi2022synaera}, is a real-time sign language–to–text translation application that demonstrates a complete ASL processing pipeline using a client–server architecture.
-
-\textbf{Problem Statement:}
-The Synaera-TeamSemaphore project confronts the significant challenge of performing real-time American Sign Language (ASL) recognition and translation on mobile devices. ASL consists of continuous, rapidly changing gestures that vary widely depending on signer style, environment, lighting, and background conditions. Capturing this information through a mobile camera and converting it to intelligible text in real time is inherently complex. Synaera focuses on several difficult subproblems: designing accurate gesture recognition models, building a client–server streaming framework for live video, and translating gloss representations into grammatically correct English sentences. These challenges are intensified by mobile hardware limitations and the latency introduced when transmitting video to the cloud for processing.
-
-\textbf{Motivations:}
-The primary motivation for Synaera is to reduce communication barriers between Deaf or hard-of-hearing individuals and the hearing community. ASL is a complete and expressive language but is not widely known outside its user base, resulting in social, educational, and professional exclusion. The project aims to leverage advances in computer vision, natural language processing, and mobile hardware to create a real-world, accessible ASL translation tool. The authors also highlight the benefit of transforming academic research into applied assistive technology, showcasing the potential of AI and cloud computing to support equity and accessibility.
-
-\textbf{Methodology:}
-Synaera employs a four-component client–server architecture:
-\begin{itemize}
-    \item \textbf{Mobile Client:} Built in Kotlin/Java, captures live video using the device camera and streams frames to the server.
-    \item \textbf{Computer Vision Model:} Processes video frames to recognize signs and convert them into gloss notation—a symbolic intermediate representation.
-    \item \textbf{Natural Language Processing Model:} Translates gloss into coherent English sentences that preserve meaning and grammar.
-    \item \textbf{Streaming Infrastructure:} A server pipeline that handles video preprocessing, gloss post-processing, and bidirectional communication between the device and models.
-\end{itemize}
-The system is deployed on an Azure cloud virtual machine, enabling scalable computation. Additional features include user authentication, onboarding, chat modules, and batch processing of uploaded ASL videos, making Synaera more comprehensive than typical ASL research prototypes.
-
-\textbf{Benefits:}
-Synaera provides valuable insight for the design of \emph{Gestura}. Its modular pipeline—gesture recognition $\rightarrow$ gloss $\rightarrow$ natural language—validates the approach of separating visual processing from linguistic generation. This supports Gestura’s architecture, where ASL inputs are recognized using on-device models and then converted into natural sentences via a large language model. Synaera also shows practical considerations for user features such as onboarding and media uploads, demonstrating how translation tools can become mainstream mobile applications rather than academic demos. Furthermore, its server-based processing model highlights methods for offloading heavy computation, which informs Gestura’s hybrid cloud strategy for model updates and dataset management.
-
-\textbf{Challenges:}
-Synaera also reveals critical limitations that Gestura must address. First, relying on continuous video streaming introduces latency and makes the system dependent on strong internet connectivity, which threatens usability in real-time accessibility scenarios. Second, streaming user video to a remote server raises significant privacy and security risks. Third, limited availability of large, diverse ASL datasets leads to accuracy and generalization challenges, particularly across regional or individual signing variations. Errors during gloss recognition propagate into the NLP stage, compounding translation inaccuracies. The project also highlights long-term maintenance concerns, such as the cost of scaling Azure-based compute resources and the need for ongoing dataset expansion. These challenges reinforce Gestura’s decision to shift inference to the device, using cloud resources primarily for secure model updates, dataset growth, and developer review workflows.
-
-
-\section{System Overview}
-Gestura is structured as a hybrid edge-cloud system, shown conceptually in Fig.~\ref{fig:architecture}.
-\begin{figure}
-    \centering
-    \includegraphics[width=1\linewidth]{justora-wireframe.svg}
-    \caption{Enter Caption}
-    \label{fig:placeholder}
-\end{figure}
-\subsection{Device-Side Components}
-On the Android device, the main components are:
-\begin{itemize}
-    \item \textbf{CameraX Capture:} Streams frames from the rear or front camera.
-    \item \textbf{Feature Extraction:} Either MediaPipe-based landmarks (hands and upper body) or raw RGB frames.
-    \item \textbf{Temporal Classifier:} An LSTM/GRU/3D-CNN/transformer model deployed via TensorFlow Lite to map sequences to ASL gloss tokens.
-    \item \textbf{Sentence Generator:} A client for a large language model (LLM) that transforms gloss tokens into natural-language sentences.
-    \item \textbf{Text-to-Speech (TTS):} Android's TextToSpeech API to vocalize output sentences.
-    \item \textbf{UI Layer:} Kotlin/Jetpack screens for ASL translation, language translation, avatar visualization, contribution, and settings.
-\end{itemize}
-
-\subsection{Cloud-Side Components}
-In the cloud, Firebase and external services provide:
-\begin{itemize}
-    \item \textbf{Authentication:} Firebase Authentication for secure login and role-based access.
-    \item \textbf{Firestore:} Collections for users, contributions, model manifests, and reference signs.
-    \item \textbf{Storage:} Video/image samples and TFLite model bundles.
-    \item \textbf{Cloud Functions:} Validation routines, signed model manifest endpoints, and optional multilingual translation.
-    \item \textbf{Avatar Service:} An external ASL avatar service that animates gloss or text input.
-\end{itemize}
-
-\subsection{Primary Flows}
-The system supports four primary flows:
-\begin{enumerate}
-    \item \textbf{ASL to Text/Speech:} Camera frames $\rightarrow$ features $\rightarrow$ temporal classifier $\rightarrow$ gloss tokens $\rightarrow$ LLM sentence $\rightarrow$ text + TTS.
-    \item \textbf{Text/Speech to Avatar:} Typed or transcribed text $\rightarrow$ gloss mapping $\rightarrow$ avatar animation.
-    \item \textbf{Contribution and Validation:} Guided capture $\rightarrow$ client-side quality checks $\rightarrow$ upload to Firestore/Storage $\rightarrow$ server validation and developer review $\rightarrow$ training dataset.
-    \item \textbf{Model Update:} User taps ``Update Model'' $\rightarrow$ signed manifest retrieval $\rightarrow$ checksum verification $\rightarrow$ TFLite download and activation with rollback support.
-\end{enumerate}
-
-\begin{figure}[t]
-    \centering
-    % Placeholder; replace with \includegraphics when an actual diagram is available.
-    \fbox{\parbox{0.9\linewidth}{\centering System architecture diagram placeholder.}}
-    \caption{High-level architecture of the Gestura system, combining on-device ASL recognition, natural-language generation, and cloud-backed data management.}
-    \label{fig:architecture}
-\end{figure}
-
-\section{Methodology and Detailed Design}
-This section details the modeling strategy, APIs, data structures, and interaction design used in Gestura.
-
-\subsection{Model Selection and Down-Selection Process}
-To avoid premature commitment to a single architecture, three modeling options will be evaluated:
-
-\begin{itemize}
-    \item \textbf{Option A: Keypoints + Temporal RNN.} MediaPipe Hands or Holistic extracts 2D/3D landmarks. An LSTM or GRU processes the sequence into gloss predictions.
-    \item \textbf{Option B: RGB Frames + 3D-CNN.} A lightweight 3D-CNN takes downsampled video clips and outputs gloss probabilities.
-    \item \textbf{Option C: Hybrid or Transformer.} Landmark sequences and/or learned frame features are input to a lightweight transformer encoder.
-\end{itemize}
-
-Two baselines (Options A and B) will be implemented first. Each will be trained on a small vocabulary (e.g., alphabet and common words), and evaluated on:
-\begin{itemize}
-    \item classification accuracy on a held-out test set,
-    \item end-to-end latency on a mid-range Android device,
-    \item memory footprint and battery impact.
-\end{itemize}
-The final choice will be the architecture that offers the best trade-off between accuracy and latency for on-device deployment.
-
-\subsection{Natural-Language Sentence Generation}
-The temporal classifier produces gloss sequences, which reflect ASL-specific word order and structure. To generate more natural sentences in English (and other spoken languages), the gloss sequence is sent to an LLM via a secure API. The LLM is prompted to paraphrase the gloss into a fluent sentence while preserving semantic content.
-
-For example, a gloss sequence such as:
-\begin{center}
-    \texttt{TODAY CLASS FINISH I-GO HOME}
-\end{center}
-might be mapped to:
-\begin{center}
-    ``Class is over for today, and I am going home.''
-\end{center}
-
-This approach allows Gestura to decouple gesture recognition from language generation, enabling improvements in either component independently.
-
-\subsection{APIs, Libraries, and Tools}
-The following tools and libraries will be used:
-
-\begin{itemize}
-    \item \textbf{Mobile:} Android Studio, Kotlin, CameraX, MediaPipe, TextToSpeech, SpeechRecognizer, WorkManager, and Jetpack Navigation/ViewModel.
-    \item \textbf{ML:} TensorFlow/Keras for training, TensorFlow Lite for on-device inference, and model optimization (quantization, pruning).
-    \item \textbf{Cloud:} Firebase Authentication, Cloud Firestore, Cloud Storage, Cloud Functions; optional Google or Azure translation APIs.
-    \item \textbf{Avatar:} An external ASL avatar API capable of rendering gloss or text as sign animations.
-\end{itemize}
-
-These tools are chosen for their maturity, mobile compatibility, and integration support in the Android ecosystem.
-
-\subsection{Data Model}
-A simplified Firestore schema is as follows:
-
-\begin{itemize}
-    \item \texttt{users/\{uid\}}: user profile including email, role (user, reviewer, developer), total contributions, accepted contributions, and accuracy.
-    \item \texttt{contributions/\{cid\}}: submission metadata including \texttt{uid}, timestamp, label, device information, quality scores, status (\texttt{pending}, \texttt{approved}, \texttt{rejected}), and optional keypoints.
-    \item \texttt{models/\{mid\}}: model version metadata including \texttt{version}, \texttt{tfliteURL}, \texttt{sha256}, \texttt{signature}, and release notes.
-    \item \texttt{asl\_reference/\{word\}}: canonical example videos or images for key vocabulary items.
-\end{itemize}
-
-This structure supports both end-user translation and developer-centric model lifecycle management.
-
-\subsection{User Interface and Interaction Design}
-Gestura follows a tab-based navigation structure with the following screens:
-\begin{itemize}
-    \item \textbf{ASL Translate:} Camera preview, recognized gloss, generated sentence, and TTS controls.
-    \item \textbf{Language Translate:} Text and speech input fields for multilingual text-to-text and text-to-speech translation.
-    \item \textbf{Avatar:} Text input mapped to an animated ASL avatar, with controls for playback speed.
-    \item \textbf{Contribute:} Guided prompts for capturing new ASL samples, displaying quality feedback and submission status.
-    \item \textbf{Settings:} Account management, dark mode, model update button, and accessibility options.
-\end{itemize}
-
-The UI emphasizes accessibility (large touch targets, high contrast, optional dark mode, captions) and is designed for frequent daily use.
-
-\section{Implementation Plan}
-The implementation of Gestura follows a phased schedule aligned with academic timelines and milestone-based software engineering practices. Each phase includes specific deliverables, tasks, and measurable outcomes. Table-based Gantt representations may be added in the appendix if required.
-
-\subsection{Project Schedule}
-
-Table~\ref{tab:schedule} summarizes the planned schedule of Gestura's development phases, the expected duration of each task, and their corresponding deliverables.
-
-\begin{table}[h]
-\centering
-\caption{Gestura Project Schedule and Task Durations}
-\label{tab:schedule}
-\begin{tabular}{|p{3.1cm}|p{1.2cm}|p{2.8cm}|}
-\hline
-\textbf{Task / Phase} & \textbf{Duration} & \textbf{Deliverables} \\
-\hline
-Foundation \& Core Skills (Android + Kotlin) & 6 weeks & AND102 completion, prototype apps \\
-\hline
-ASL Recognition Prototype (Model + Camera) & 4 weeks & 15--20 gesture TFLite model, camera preview inference \\
-\hline
-Guided Capture \& Firebase Integration & 5 weeks & Contribution UI, quality checks, reviewer dashboard \\
-\hline
-NLP Integration \& Multilingual Support & 6 weeks & Gloss-to-sentence, translation API, retraining pipeline \\
-\hline
-Avatar + Model Lifecycle Management & 5 weeks & GenASL avatar, model update system \\
-\hline
-Testing, Optimization, Final Presentation & 3 weeks & Beta app, report, slides \\
-\hline
-\end{tabular}
-\end{table}
-
-
-\subsection{Critical Path}
-The critical path for the Gestura project consists of the following sequence of dependent activities:
-
-\begin{enumerate}
-    \item ASL Recognition Prototype (Phase 2)
-    \item Guided Capture \& Backend Integration (Phase 3)
-    \item NLP Integration \& Multilingual Support (Phase 4)
-    \item Model Lifecycle Management (Phase 5)
-\end{enumerate}
-
-These tasks directly influence the availability of the end-to-end system. Any delays in model development, dataset contribution workflows, or gloss-to-sentence integration will shift the final project completion date. Foundations (Phase 1) and final polishing (Phase 6) are not on the critical path but must be completed on schedule to avoid compounding delays.
-
-
-
-\subsection{Phase 1: Foundation and Core Skills (Aug 18 -- Sep 26)}
-This foundational phase focuses on Android development fundamentals, Kotlin syntax, mobile UI/UX design patterns, and basic machine learning integration.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Completion of CodePath AND102 Android Developer coursework.
-    \item Mini-projects demonstrating layouts, asynchronous tasks, and API usage.
-    \item A working personal Android app showcasing core competencies.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item Proficiency in Android Studio and Kotlin.
-    \item Ability to implement UI components, data binding, and navigation.
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Complete weekly CodePath assignments and labs.
-    \item Build small apps to practice CameraX, Firebase Authentication, and REST APIs.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item AND102 final average $\geq$ 90\%.
-    \item One functional, polished Android app.
-\end{itemize}
-
-\subsection{Phase 2: ASL Recognition Prototype (Sep 29 -- Oct 24)}
-This phase establishes the first gesture-recognition model and Android integration pipeline.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Initial ASL gesture model covering approximately 15--20 signs.
-    \item Firebase database and storage configuration.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item MobileNetV2-style CNN or lightweight temporal model trained on curated datasets.
-    \item Functional real-time inference preview inside the Android camera screen.
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Curate datasets (e.g., WLASL), record custom samples, and apply augmentation.
-    \item Train and evaluate models in Python; convert to TFLite for deployment.
-    \item Set up Firebase Firestore and Storage for sample uploads.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item $\geq$ 85\% test accuracy on 15 gesture classes.
-    \item Reliable Firebase interactions (reads/writes for model and user data).
-\end{itemize}
-
-\subsection{Phase 3: Guided Capture and Backend Integration (Oct 27 -- Dec 1)}
-This phase introduces a structured contribution workflow and developer review tools.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Alpha version of the app with guided capture prompts.
-    \item Improved gesture-recognition performance with live error flags.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item TFLite model integrated fully into Kotlin inference pipeline.
-    \item Internal alpha testing across multiple devices.
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Implement guided capture flow, quality scoring, and Storage uploads.
-    \item Integrate reviewer dashboard mode for developers.
-    \item Optimize inference time, memory usage, and battery consumption.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item On-device accuracy within 5\% of Python server model.
-    \item $\geq$ 50 user-contributed gesture variations collected.
-    \item Fewer than 5 critical bugs after alpha testing.
-\end{itemize}
-
-\subsection{Phase 4: NLP Integration and Multilingual Support (Jan 21 -- Feb 28)}
-This phase connects gesture recognition to natural-language sentence generation and multilingual translation.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item End-to-end ASL gloss $\rightarrow$ English sentence generation.
-    \item Automated weekly retraining pipeline for model updates.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item OpenAI API integration for sentence construction.
-    \item Multilingual text-translation support (e.g., Google or Azure).
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Build gloss sequencer module in Kotlin.
-    \item Integrate LLM-based sentence formation with fallback safety prompts.
-    \item Implement scheduled retraining workflow using contributed samples.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item Coherent sentence generation $>$70\% of the time (human-evaluated).
-    \item Automatic incremental retraining every 7 days.
-    \item Support for at least 2 additional languages.
-\end{itemize}
-
-\subsection{Phase 5: Avatar and Model Lifecycle Management}
-This phase focuses on reverse translation (English text-to-ASL avatar) and secure on-device model updates.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Avatar screen wired to an external ASL animation service (e.g., GenASL).
-    \item Signed model-manifest update system with cryptographic verification.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item Functional offline-compatible update button in Settings.
-    \item Basic error handling and rollback mechanism for corrupted downloads.
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Integrate avatar APIs; optimize playback and caching.
-    \item Add SHA-256 model integrity checks and signature validation.
-    \item Build fallback/reroll logic for failed updates.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item Stable avatar output for at least 50 common words/phrases.
-    \item Secure and reliable model updates deliverable even under weak connectivity.
-\end{itemize}
-
-\subsection{Phase 6: Testing, Optimization, and Presentation}
-The final phase prepares Gestura for public demonstration.
-
-\textbf{Deliverables:}
-\begin{itemize}
-    \item Fully tested beta build.
-    \item Final project report, poster, and live presentation.
-\end{itemize}
-
-\textbf{Milestones:}
-\begin{itemize}
-    \item Comprehensive QA passes across accuracy, latency, usability, and accessibility.
-\end{itemize}
-
-\textbf{Tasks:}
-\begin{itemize}
-    \item Conduct stress tests on multiple Android devices.
-    \item Fix minor bugs and smooth UI/UX details.
-    \item Prepare demo scripts, slides, and documentation.
-\end{itemize}
-
-\textbf{Outcomes:}
-\begin{itemize}
-    \item Real-time inference latency $\leq$120\,ms.
-    \item Positive user feedback from test participants.
-    \item Presentation-ready beta app.
-\end{itemize}
-
+% 7. Concepts Considered
 \section{Concepts Considered}
-
-As Gestura progressed from design to implementation, several technical decisions were required regarding development tools, backend infrastructure, and machine learning workflow integration. These decisions impacted scalability, development efficiency, system performance, and long-term maintainability. The primary areas considered included the development environment, backend infrastructure, and local processing tools for landmark extraction.
-
-\subsection{Integrated Development Environment (IDE)}
-
-Because Gestura is a mobile-first Android application that integrates machine learning models and cloud services, selecting an appropriate development environment was essential. The IDE needed to support Kotlin development, UI debugging, model integration, and device testing.
-
-\subsubsection{Android Studio (Selected)}
-
-Android Studio was selected as the primary development environment for Gestura. Android Studio is the official IDE for Android development and provides built-in tools specifically designed for mobile application development.
-
-\textbf{Pros:}
+Technical decisions included selecting the development environment, backend infrastructure, and processing algorithms.
 \begin{itemize}
-    \item Official Android development environment supported by Google
-    \item Native Kotlin and Java support
-    \item Built-in Android emulator for testing
-    \item Integrated Firebase support
-    \item Strong debugging and profiling tools
-    \item Direct TensorFlow Lite integration
-    \item Gradle build system for dependency management
+    \item \textbf{IDE:} Android Studio vs. Visual Studio Code.
+    \item \textbf{Backend:} Firebase vs. Custom FastAPI Server.
+    \item \textbf{Processing:} MediaPipe Holistic landmarks vs. Raw RGB Video.
+    \item \textbf{Networking:} Standard HttpURLConnection vs. OkHttp 4.x.
 \end{itemize}
 
-\textbf{Cons:}
+% 8. Concept Selection
+\section{Concept Selection}
 \begin{itemize}
-    \item High memory and CPU usage
-    \item Longer startup time compared to lightweight editors
-    \item Gradle configuration complexity for beginners
+    \item \textbf{Android Studio} was selected for its native tools and emulator support.
+    \item \textbf{Firebase} was chosen for rapid development and built-in authentication/storage scalability.
+    \item \textbf{MediaPipe Landmarks} were selected to reduce data dimensionality and improve privacy.
+    \item \textbf{OkHttp 4.x} was selected for modern, extension-function-based networking.
 \end{itemize}
 
-\textbf{Reason for Selection}
-
-Android Studio was selected because it provides a complete mobile development environment and integrates seamlessly with Firebase, TensorFlow Lite, and Android UI tools. These capabilities significantly reduced development complexity and improved debugging and testing workflows.
-
-\subsubsection{Visual Studio Code}
-
-Visual Studio Code was considered as a lightweight alternative for development.
-
-\textbf{Pros:}
+% 9. Design and Implementation
+\section{Design and Implementation}
+The app uses a modular fragment-based design:
 \begin{itemize}
-    \item Lightweight and fast
-    \item Highly customizable
-    \item Strong extension ecosystem
-    \item Excellent Git integration
-    \item Strong Python support
+    \item \textbf{OnDeviceCaptionFragment:} Core translation engine using CameraX and TFLite.
+    \item \textbf{ContributeFragment:} Guided capture with validation logic.
+    \item \textbf{AvatarFragment:} WebView-based integration of the Hand Talk SDK.
+    \item \textbf{DevReviewFragment:} Role-gated triage tool for accepted/rejected gestures.
 \end{itemize}
 
-\textbf{Cons:}
-\begin{itemize}
-    \item Limited Android-specific tools
-    \item No built-in Android emulator
-    \item Requires additional configuration for mobile development
-\end{itemize}
+% 10. Conclusion/Summary
+\section{Conclusion}
+Gestura successfully demonstrates a scalable, privacy-aware ASL translation platform. By utilizing on-device inference and community-driven data pipelines, it bridges the gap between Deaf and hearing communities effectively.
 
-\textbf{Reason Not Selected as Primary IDE}
-
-Although Visual Studio Code is powerful and flexible, it lacks Android-specific development features required for Gestura's mobile application. However, Visual Studio Code was still used for backend scripting and local development tasks.
-
-\subsection{Backend Infrastructure}
-
-Gestura requires backend infrastructure to support authentication, model updates, contribution workflows, and storage of user-submitted gesture samples. Several backend options were considered.
-
-\subsubsection{Firebase (Selected)}
-
-Firebase was selected as the primary backend platform for Gestura. Firebase provides multiple cloud services including Authentication, Firestore Database, Cloud Storage, and Cloud Functions.
-
-\textbf{Pros:}
-\begin{itemize}
-    \item Seamless integration with Android Studio
-    \item Built-in authentication services
-    \item Real-time database using Firestore
-    \item Secure cloud storage for gesture samples and models
-    \item Scalable infrastructure with minimal configuration
-    \item Role-based access and contribution tracking support
-\end{itemize}
-
-\textbf{Cons:}
-\begin{itemize}
-    \item Vendor lock-in to Google's ecosystem
-    \item Potential cost scaling with increased usage
-    \item Security risks if rules are misconfigured
-\end{itemize}
-
-\textbf{Reason for Selection}
-
-Firebase was selected because it reduces backend complexity while providing authentication, storage, model distribution, and user contribution tracking. This allowed rapid development while maintaining scalability.
-
-\subsubsection{Custom Backend Server}
-
-A custom backend using frameworks such as FastAPI, Flask, or Node.js was also considered.
-
-\textbf{Pros:}
-\begin{itemize}
-    \item Greater flexibility and customization
-    \item Full control over database and security rules
-    \item Easier migration to alternative infrastructures
-\end{itemize}
-
-\textbf{Cons:}
-\begin{itemize}
-    \item Increased development time
-    \item Higher maintenance requirements
-    \item Requires manual authentication and storage management
-\end{itemize}
-
-\textbf{Reason Not Selected}
-
-While a custom backend offers flexibility, Firebase allowed faster development and reduced infrastructure management, making it better suited for the project timeline.
-
-\subsection{Localhost Feature Extraction Server}
-
-Gestura required extracting landmark points from video input before classification. A lightweight localhost server was implemented for this purpose.
-
-\subsubsection{Visual Studio Code for Localhost Server (Selected)}
-
-Visual Studio Code was used to develop the Python-based localhost server responsible for extracting gesture landmarks using MediaPipe.
-
-\textbf{Pros:}
-\begin{itemize}
-    \item Lightweight development environment
-    \item Strong Python support
-    \item Easy localhost server testing
-    \item Quick iteration for feature extraction scripts
-    \item Integrated terminal and debugging tools
-\end{itemize}
-
-\textbf{Cons:}
-\begin{itemize}
-    \item Requires manual environment configuration
-    \item Not optimized for mobile application debugging
-\end{itemize}
-
-\textbf{Reason for Selection}
-
-Visual Studio Code was selected because it provides a fast and flexible environment for Python-based development and localhost testing. This made it ideal for implementing the MediaPipe-based landmark extraction server.
-
-\subsection{Final Technology Decisions}
-
-The final technology selections for Gestura were:
-
-\begin{itemize}
-    \item Android Studio as the primary mobile development IDE
-    \item Firebase as the backend platform for authentication, storage, and model updates
-    \item Visual Studio Code for localhost Python server and feature extraction
-\end{itemize}
-
-These selections balanced development speed, scalability, and system performance while supporting machine learning workflows required for Gestura.
-
-
-\section{Anticipated Results and Evaluation}
-\subsection{Expected Results}
-The anticipated technical outcomes are:
-\begin{itemize}
-    \item Near real-time ASL recognition (alphabet and common words) with natural sentence output and TTS.
-    \item A functioning contribution pipeline with automated quality checks and developer review tools.
-    \item A secure model update workflow with versioning and rollback.
-    \item A working text-to-avatar module for reverse translation and learning.
-\end{itemize}
-
-\subsection{Evaluation Criteria}
-Evaluation will focus on three dimensions:
-
-\subsubsection{Accuracy}
-Classification accuracy will be measured on a curated test set. The target is at least 90\% accuracy for alphabet signs and at least 80\% for common words and phrases. Sentence-level correctness will be evaluated using human raters, who will judge whether the generated sentences accurately reflect the intended meaning.
-
-\subsubsection{Latency and Performance}
-End-to-end latency from gesture completion to text output will be measured on mid-range Android hardware. The goal is to maintain a median latency under approximately 120 ms for inference, plus minimal overhead for sentence generation (which may depend on network conditions).
-
-\subsubsection{Usability}
-User studies with a small group of participants will be conducted to assess:
-\begin{itemize}
-    \item ease of use and clarity of the UI,
-    \item perceived translation quality,
-    \item comfort with the contribution workflow and privacy settings.
-\end{itemize}
-Feedback will guide final UI and interaction refinements.
-
-\section{Conclusion and Future Work}
-Gestura aims to provide an integrated, mobile-first ASL communication tool that combines on-device gesture recognition, natural-language generation, multilingual translation, and avatar-based reverse translation. By embedding a guided contribution pipeline and role-based developer tools, the application is designed to grow with community participation and support continuous model improvement.
-
-Future work includes expanding the vocabulary beyond the initial set of alphabet signs and common words, supporting dynamic sentence-level ASL sequences, and exploring hands-free usage scenarios such as smart glasses integration. Additional directions involve building educator-oriented features (quizzes, progress tracking) and enhancing privacy guarantees for sensitive video data.
-
-Ultimately, Gestura seeks to empower Deaf, hard-of-hearing, nonverbal, and multilingual communities by making high-quality ASL translation more accessible, portable, and inclusive.
-
+% 11. Bibliography
 \begin{thebibliography}{00}
-
-\bibitem{bantupalli2018asl}
-K.~Bantupalli and Y.~Xie, ``American Sign Language Recognition Using Deep Learning and Computer Vision,'' in \emph{Proc. IEEE Int. Conf. Big Data}, 2018.
-
-\bibitem{roh2021data}
-Y.~Roh, G.~Heo, and S.~E.~Whang, ``A Survey on Data Collection for Machine Learning: A Big Data--AI Integration Perspective,'' \emph{IEEE Trans. Knowl. Data Eng.}, vol.~33, no.~4, pp.~1328--1347, 2021.
-
-\bibitem{karthikeyan2018mlmobile}
-N.~G.~Karthikeyan, \emph{Machine Learning Projects for Mobile Applications}.\hskip 1em plus 0.5em minus 0.4em\relax Packt Publishing, 2018.
-
-\bibitem{miljkovic2024firebase}
-K.~Miljkovic \emph{et al.}, ``Agile Multi-tier Android Application Development With Firebase,'' in \emph{Proc. Sinteza}, 2024.
-
-\bibitem{firdousi2022synaera}
-M.~Firdousi and Team Semaphore, ``Synaera: Android application for sign language to text translation,'' 2022. [Online]. Available: \url{https://github.com/}
-
+\bibitem{bantupalli2018asl} K. Bantupalli and Y. Xie, ``American Sign Language Recognition Using Deep Learning and Computer Vision,'' 2018.
+\bibitem{roh2021data} Y. Roh et al., ``A Survey on Data Collection for Machine Learning,'' 2021.
+\bibitem{karthikeyan2018mlmobile} N. G. Karthikeyan, ``Machine Learning Projects for Mobile Applications,'' 2018.
+\bibitem{miljkovic2024firebase} K. Miljkovic et al., ``Agile Multi-tier Android Application Development With Firebase,'' 2024.
 \end{thebibliography}
+
+% 12. Appendices
+\appendices
+\section{Gestura User Manual}
+Refer to \texttt{UserManual.txt} in the project root for detailed instructions on authentication, live translation, and the contribution workflow.
+
+\section{Database Schema}
+The Firestore database uses the following collections:
+\begin{itemize}
+    \item \texttt{asl\_review}: Triage queue for pending user uploads.
+    \item \texttt{asl\_accepted}: Verified dataset for model retraining.
+    \item \texttt{asl\_reference}: Reference materials for user learning.
+    \item \texttt{users}: User profiles and contribution statistics.
+\end{itemize}
+
+\section{System Architecture}
+(Architecture diagram and data flow diagrams included in the technical documentation).
 
 \end{document}

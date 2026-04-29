@@ -86,25 +86,32 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
         val reviewRef = db.collection("asl_review").document(item.id)
         val acceptedRef = db.collection("asl_accepted").document(item.id)
 
-        // Matching Screenshot 2 payload exactly
-        val acceptedData = hashMapOf(
-            "confidence" to item.confidence,
-            "createdAt" to item.createdAt,
-            "id" to item.id,
-            "keypoints" to item.keypoints,
-            "predictedLabel" to item.predictedLabel,
-            "status" to "accepted",
-            "userEmail" to item.userEmail,
-            "word" to item.word
-        )
+        // Get the original document to ensure we have the storage path
+        reviewRef.get().addOnSuccessListener { doc ->
+            val storagePath = doc.getString("videoStoragePath") ?: ""
+            val videoUrl = item.videoUrl
 
-        db.runBatch { batch ->
-            batch.set(acceptedRef, acceptedData)
-            batch.delete(reviewRef)
-        }.addOnSuccessListener {
-            adapter.removeAt(position)
-        }.addOnFailureListener {
-            adapter.notifyItemChanged(position)
+            val acceptedData = hashMapOf(
+                "confidence" to item.confidence,
+                "createdAt" to item.createdAt,
+                "id" to item.id,
+                "keypoints" to item.keypoints,
+                "predictedLabel" to item.predictedLabel,
+                "status" to "accepted",
+                "userEmail" to item.userEmail,
+                "word" to item.word,
+                "videoUrl" to videoUrl,
+                "videoStoragePath" to storagePath
+            )
+
+            db.runBatch { batch ->
+                batch.set(acceptedRef, acceptedData)
+                batch.delete(reviewRef)
+            }.addOnSuccessListener {
+                adapter.removeAt(position)
+            }.addOnFailureListener {
+                adapter.notifyItemChanged(position)
+            }
         }
     }
 
@@ -112,25 +119,29 @@ class DevReviewFragment : Fragment(R.layout.dev_review_fragment) {
         val reviewRef = db.collection("asl_review").document(item.id)
         val rejectedRef = db.collection("asl_rejected").document(item.id)
 
-        // Maintaining consistency for rejected documents as well
-        val rejectedData = hashMapOf(
-            "confidence" to item.confidence,
-            "createdAt" to item.createdAt,
-            "id" to item.id,
-            "keypoints" to item.keypoints,
-            "predictedLabel" to item.predictedLabel,
-            "status" to "rejected",
-            "userEmail" to item.userEmail,
-            "word" to item.word
-        )
+        reviewRef.get().addOnSuccessListener { doc ->
+            val storagePath = doc.getString("videoStoragePath") ?: ""
+            
+            val rejectedData = hashMapOf(
+                "confidence" to item.confidence,
+                "createdAt" to item.createdAt,
+                "id" to item.id,
+                "keypoints" to item.keypoints,
+                "predictedLabel" to item.predictedLabel,
+                "status" to "rejected",
+                "userEmail" to item.userEmail,
+                "word" to item.word,
+                "videoStoragePath" to storagePath
+            )
 
-        db.runBatch { batch ->
-            batch.set(rejectedRef, rejectedData)
-            batch.delete(reviewRef)
-        }.addOnSuccessListener {
-            adapter.removeAt(position)
-        }.addOnFailureListener {
-            adapter.notifyItemChanged(position)
+            db.runBatch { batch ->
+                batch.set(rejectedRef, rejectedData)
+                batch.delete(reviewRef)
+            }.addOnSuccessListener {
+                adapter.removeAt(position)
+            }.addOnFailureListener {
+                adapter.notifyItemChanged(position)
+            }
         }
     }
 }

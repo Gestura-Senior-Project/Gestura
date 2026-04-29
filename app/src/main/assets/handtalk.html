@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #F9FAFB; /* Match card background */
+        }
+        #handtalk-container {
+            width: 100%;
+            height: 100%;
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <!-- The Hand Talk widget will be rendered here -->
+    <div id="handtalk-container"></div>
+
+    <!-- Hand Talk SDK -->
+    <script src="https://api-cdn.handtalk.me/sdk/latest/ht-api-sdk.min.js"></script>
+
+    <script>
+        var htapi;
+
+        // Diagnostic logging
+        console.log("Assets HTML loaded");
+
+        function initHandTalk(token) {
+            console.log("initHandTalk called with token: " + token);
+
+            if (token === "YOUR_HAND_TALK_TOKEN") {
+                console.error("SDK Error: Please set a valid Hand Talk token");
+                document.body.innerHTML = "<div style='padding:20px; color:red; font-family:sans-serif;'><b>Authentication Error</b><br>Please set your real token in AvatarFragment.kt</div>";
+                return;
+            }
+
+            try {
+                if (window.HTApi) {
+                    htapi = new window.HTApi({
+                        token: token,
+                        container: document.getElementById('handtalk-container'),
+                        // Force desktop mode can sometimes help mobile WebViews render better
+                        side: 'left'
+                    });
+
+                    htapi.active();
+                    console.log("Hand Talk activated successfully");
+                } else {
+                    console.error("HTApi class not found. Check internet connection.");
+                }
+            } catch (e) {
+                console.error("Initialization exception: " + e.message);
+            }
+        }
+
+        function translateText(text) {
+            console.log("Requesting translation: " + text);
+            if (htapi && htapi.translate) {
+                htapi.translate(text);
+            } else {
+                console.warn("HTApi not ready for translation");
+            }
+        }
+    </script>
+</body>
+</html>
